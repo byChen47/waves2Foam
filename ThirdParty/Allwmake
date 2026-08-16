@@ -1,0 +1,201 @@
+#!/bin/bash
+
+## The script has been modified on 2015.09.08 to reflect the fact that
+#  the svn-repository for OceanWave3D has been discontinued.
+
+sourceLib="lib"
+settings="settings"
+
+if [ ! -d "$sourceLib" ]
+then
+    mkdir $sourceLib
+fi
+
+
+echo "====================================="
+echo "    COMPILE LAPACK-3.3.1"
+echo "====================================="
+
+compileFlag=0
+
+if [ ! -f "$sourceLib/libblas.a" ]
+then
+    compileFlag=1;
+fi
+
+if [ ! -f "$sourceLib/liblapack_gfortran.a" ]
+then
+    compileFlag=1;
+fi
+
+if [ ! -f "$sourceLib/libtmglib_gfortran.a" ]
+then
+    compileFlag=1;
+fi
+
+## COMPILE LAPACK
+if [ "$compileFlag" == "1" ]
+then
+    # Unpack lapack-3.3.1
+    tar -xzf lapack-3.3.1.tgz
+
+    # Copy the necessary settings
+    cp $settings/lapackSettings/* lapack-3.3.1/.
+
+    # Compile lapack
+    cd lapack-3.3.1
+    make clean
+    make all
+    cd ..
+else
+    echo
+    echo "lapack-3.3.1 has already been compiled"
+    echo
+fi
+
+
+echo "====================================="
+echo "    COMPILE SPARSKIT2"
+echo "====================================="
+
+compileFlag=0
+
+if [ ! -f "$sourceLib/libskit_gfortran.a" ]
+then
+    compileFlag=1;
+fi
+
+## COMPILE SPARSKIT2
+if [ "$compileFlag" == "1" ]
+then
+    # Unpack SPARSKIT2
+    tar -xzf SPARSKIT2.tar.gz
+
+    # Copy the necessary settings
+    cp $settings/sparseSettings/makefile SPARSKIT2/.
+
+    # Compile SPARSKIT2
+    cd SPARSKIT2
+    make clean
+    make lib
+    mv libskit_gfortran.a ../lib/.
+    cd ..
+else
+    echo
+    echo "SPARSKIT2 has already been compiled"
+    echo
+fi
+
+
+echo "====================================="
+echo "    COMPILE OCEANWAVE3D"
+echo "====================================="
+
+# Path for the OceanWave3D source tree
+ocw="OceanWave3D-Fortran90"
+
+# Optional path to an already downloaded OceanWave3D-Fortran90.
+# If it is not inside ThirdParty, set OCEANWAVE3D_DIR to the full path
+# of the downloaded source and a symbolic link will be created.
+ocwSource="${OCEANWAVE3D_DIR:-}"
+
+# Create output directory for OceanWave3D
+if [ ! -d "bin" ]
+then
+    mkdir bin
+fi
+
+# Use an existing local download instead of cloning from GitHub
+if [ ! -d "$ocw" ]
+then
+    if [ ! -z "$ocwSource" ] && [ -d "$ocwSource" ]
+    then
+        echo ""
+        echo "Linking to local OceanWave3D source: $ocwSource ..."
+        ln -s "$ocwSource" "$ocw"
+    else
+        echo ""
+        echo "OceanWave3D-Fortran90 was not found in $PWD"
+        echo "Place the downloaded source in $PWD/$ocw,"
+        echo "or set OCEANWAVE3D_DIR to the path of your local copy."
+        echo ""
+        exit 1
+    fi
+else
+    echo ""
+    echo "Using existing local OceanWave3D source in $ocw (no git download)"
+fi
+
+# Always copy the waves2Foam settings on top of the local source
+cp $settings/oceanWave3DSettings/common.mk $ocw/.
+cp $settings/oceanWave3DSettings/makefile $ocw/.
+
+# Check for the correct environmental variables
+if [ -z "$WAVES_LIBBIN" ]
+then
+    echo ""
+    echo "Set the environmental variables for waves2Foam"
+    echo "Exiting compilation process"
+    echo ""
+    exit 1
+fi
+
+# Check whether the executable has been deleted
+if [ ! -f "$WAVES_APPBIN/OceanWave3D" ]
+then
+    compileFlag=1
+fi
+
+# Check whether the library has been deleted
+if [ ! -f "$WAVES_LIBBIN/libOceanWave3D.so" ]
+then
+    compileFlag=1
+fi
+
+if [ "$compileFlag" == "1" ]
+then
+    # Temporary build directory
+    mkdir build
+
+    # Compile OceanWave3D input an executable and a dynamic library
+    cd $ocw
+
+    make clean
+    make Release
+    make shared
+
+    cd $OLDPWD
+
+    # Clean up
+    rm -rf build
+else
+    echo
+    echo "OceanWave3D has already been compiled"
+    echo
+fi
+
+pwd
+
+echo "====================================="
+echo "    COMPILE FENTON4FOAM"
+echo "====================================="
+
+fentonName="fenton4Foam"
+
+if [ ! -f "$WAVES_APPBIN/$fentonName" ]
+then
+    echo
+    echo "Compiling fenton4Foam"
+    echo
+    cd $fentonName
+    gfortran -o $WAVES_APPBIN/$fentonName $fentonName.f fft.f
+    cd $OLDPWD
+else
+    echo
+    echo "fenton4Foam has already been compiled"
+    echo
+fi
+
+exit 0
+
+
