@@ -98,7 +98,7 @@ Built libraries and executables are installed into `$FOAM_USER_LIBBIN` / `$FOAM_
 ### Notes
 
 * **Always build through `./Allwmake`** (or source `bin/bashrc` first). The `WAVES_*` environment variables and the OpenFOAM version macros (`WM_PROJECT_VERSION_NUMBER`, `OFPLUSBRANCH`, ...) must be set; building individual components with `wmake` in a plain shell will silently produce broken compile flags.
-* **OceanWave3D is not bundled** with this repository. `ThirdParty/Allwmake` needs the [OceanWave3D-Fortran90](https://github.com/OpenFOAM-Waves/OceanWave3D-Fortran90) source in `ThirdParty/OceanWave3D-Fortran90` (or anywhere on disk — then set `OCEANWAVE3D_DIR` to its path before running `./Allwmake`). If it cannot find the source, the script prints exactly where it expects it.
+* **OceanWave3D is bundled** in `ThirdParty/OceanWave3D-Fortran90` (source, license and README included), so a fresh clone builds everything without downloading extra sources. If you prefer a different version, replace that directory or set `OCEANWAVE3D_DIR` to the path of your own copy before running `./Allwmake`.
 * If the build is interrupted, `./Allwmake` will pick up where it left off: already-compiled ThirdParty libraries and binaries are detected and skipped.
 
 ## Usage
