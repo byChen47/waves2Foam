@@ -13,12 +13,26 @@ then
 fi
 
 ### USER DEFINED ENVIRONMENTAL VARIABLES
-export WAVES_DIR=$WM_PROJECT_USER_DIR/applications/utilities/waves2Foam
+# Auto-detect the waves2Foam root so the repository can live anywhere.
+# Falls back to the standard user-directory location if detection fails.
+export WAVES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)"
+if [ -z "$WAVES_DIR" ] || [ ! -d "$WAVES_DIR" ]
+then
+    export WAVES_DIR=$WM_PROJECT_USER_DIR/applications/utilities/waves2Foam
+fi
 export WAVES_APPBIN=$FOAM_USER_APPBIN
 export WAVES_LIBBIN=$FOAM_USER_LIBBIN
 
 export WAVES_GSL_INCLUDE=/usr/include
 export WAVES_GSL_LIB=/usr/lib64
+
+# Ubuntu/Debian multiarch: GSL lives under /usr/lib/<multiarch>. The linker
+# ignores a missing -L directory, but pick the right path when it exists so
+# the build is warning-free on all toolchains.
+if [ ! -d "$WAVES_GSL_LIB" ] && [ -d /usr/lib/x86_64-linux-gnu ]
+then
+    export WAVES_GSL_LIB=/usr/lib/x86_64-linux-gnu
+fi
 
 ### OTHER STATIC ENVIRONMENTAL VARIABLES
 ## Version number - first old numbering system for foam-extend, OpenFoam and up to OpenFoam-v3.0+

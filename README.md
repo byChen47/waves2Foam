@@ -29,6 +29,8 @@ git clone https://github.com/byChen47/waves2Foam.git
 cd waves2Foam
 ```
 
+You can actually clone it anywhere — `bin/bashrc` detects the repository root automatically, so `./Allwmake` works from any location.
+
 ## Requirements
 
 * **OpenFOAM v2406** (OpenFOAM.org), built and sourced:
@@ -82,6 +84,22 @@ cd $WM_PROJECT_USER_DIR/applications/utilities/waves2Foam
 ./Allwmake
 ```
 
+### File permissions (Ubuntu)
+
+`git clone` preserves the executable bits, so `./Allwmake` normally runs right away. If you downloaded the repository as a **ZIP archive** (GitHub's "Download ZIP"), the permissions are lost and you must restore them first:
+
+```bash
+find . -type f \( -name 'Allwmake' -o -name 'Allwclean' -o -name 'Allrun' -o -name 'prepareCase.sh' -o -name 'makeNewWaveTheory' \) -exec chmod +x {} +
+```
+
+Verify with:
+
+```bash
+ls -l Allwmake
+```
+
+It should show `-rwxr-xr-x`. The same command also works for filesystems that do not store Unix permissions (e.g. shared folders or some USB drives).
+
 `./Allwmake` will:
 
 1. **Set up the environment** by sourcing `bin/bashrc` (defines the `WAVES_*` variables, detects OpenFOAM v2406 and the OpenFOAM+ branch, and selects the matching `solvers2406_PLUS` / `waves2FoamSampling2406` sources).
@@ -93,7 +111,7 @@ cd $WM_PROJECT_USER_DIR/applications/utilities/waves2Foam
 4. **Build the solvers**: `waveFoam`, `waveIsoFoam`, `porousWaveFoam`.
 5. **Build the pre-processing utilities**: `setWaveField`, `setWaveParameters`, `waveGaugesNProbes`, `faceSetToSTL`, `relaxationZoneLayout`, `sampleIncidentWaveField`.
 
-Built libraries and executables are installed into `$FOAM_USER_LIBBIN` / `$FOAM_USER_APPBIN` (by default `$HOME/OpenFOAM/chen-v2406/platforms/linux64GccDPInt32Opt/lib` and `.../bin`).
+Built libraries and executables are installed into `$FOAM_USER_LIBBIN` / `$FOAM_USER_APPBIN` (by default `$HOME/OpenFOAM/<username>-v2406/platforms/linux64GccDPInt32Opt/lib` and `.../bin`).
 
 ### Notes
 
