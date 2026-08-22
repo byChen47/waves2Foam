@@ -1,0 +1,3 @@
+overWaveDyMFoam.C
+
+EXE = $(FOAM_APPBIN)/overWaveDyMFoam
