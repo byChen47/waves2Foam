@@ -119,6 +119,25 @@ Built libraries and executables are installed into `$FOAM_USER_LIBBIN` / `$FOAM_
 * **OceanWave3D is bundled** in `ThirdParty/OceanWave3D-Fortran90` (source, license and README included), so a fresh clone builds everything without downloading extra sources. If you prefer a different version, replace that directory or set `OCEANWAVE3D_DIR` to the path of your own copy before running `./Allwmake`.
 * If the build is interrupted, `./Allwmake` will pick up where it left off: already-compiled ThirdParty libraries and binaries are detected and skipped.
 
+### OceanWave3D build fix (dash compatibility)
+
+The bundled OceanWave3D makefile previously used a bash-only redirection (`&> /dev/null`) in its `*.mod` housekeeping steps. On systems where `/bin/sh` is **dash** (the default on Ubuntu/Debian), that construct is parsed differently, so the `then` branch always executed and an unconditional `cp` of `thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod` failed — that file does not exist in the bundled source tree (the only consumer, `StoreDataVTK.f90`, is commented out in `src/IO/makefile.inc`). The failing recipe aborted the OceanWave3D build early:
+
+```text
+mv: cannot stat '*.mod': No such file or directory
+cp: cannot stat 'thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod': No such file or directory
+make: *** [makefile:132: .../build/precision.o] Error 1
+```
+
+The missing `libOceanWave3D.so` then caused cascading `-lOceanWave3D` / `-lwaves2Foam` link errors.
+
+The fix in `ThirdParty/settings/oceanWave3DSettings/makefile`:
+
+* replaces `&> /dev/null` with the POSIX-compatible `> /dev/null 2>&1`, and
+* only copies `lib_vtk_io.mod` when it actually exists.
+
+`./Allwmake` copies this settings makefile over the bundled OceanWave3D source on every run, so fresh clones build out of the box on both bash and dash.
+
 ## Usage
 
 1. Copy a tutorial case, e.g.
