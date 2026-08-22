@@ -72,8 +72,10 @@ default:
 # Targets for linking
 Release: FFLAGS = $(OPTFLAGS)
 Release: $(OBJECTSBUILDDIR)
-	@if ls *.mod &> /dev/null; then \
+	@if ls ./*.mod > /dev/null 2>&1; then \
 	mv -v ./*.mod $(BUILDDIR); \
+	fi
+	@if [ -f ./thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod ]; then \
 	cp -v ./thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod $(BUILDDIR); \
 	fi
 	@echo "*** Starting linking of files for OceanWave3D (Release)... ***"
@@ -83,8 +85,10 @@ Release: $(OBJECTSBUILDDIR)
 
 Debug: FFLAGS = $(DBFLAGS)
 Debug: $(OBJECTSBUILDDIR) 
-	@if ls *.mod &> /dev/null; then \
-	mv -v *.mod $(BUILDDIR); \
+	@if ls ./*.mod > /dev/null 2>&1; then \
+	mv -v ./*.mod $(BUILDDIR); \
+	fi
+	@if [ -f thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod ]; then \
 	cp -v thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod $(BUILDDIR); \
 	fi
 	@echo "*** Starting linking of files for OceanWave3D (Debug)... ***"
@@ -96,8 +100,10 @@ all: Release
 
 shared: FFLAGS = $(SHLIBFLAGS)
 shared: $(OBJECTSBUILDDIR)
-	@if ls *.mod &> /dev/null; then \
+	@if ls ./*.mod > /dev/null 2>&1; then \
 	mv -v ./*.mod $(BUILDDIR); \
+	fi
+	@if [ -f ./thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod ]; then \
 	cp -v ./thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod $(BUILDDIR); \
 	fi
 	@echo "*** Starting linking of files for OceanWave3D shared library (Release)... ***"
@@ -129,8 +135,10 @@ $(BUILDDIR)/%.o: %.f
 	$(FC) $(FFLAGS) -c $< -o $@ $(INCLUDEDIRS)
 
 $(BUILDDIR)/%.o: %.f90
-	@if ls *.mod &> /dev/null; then \
-	mv -v *.mod $(BUILDDIR); \
+	@if ls ./*.mod > /dev/null 2>&1; then \
+	mv -v ./*.mod $(BUILDDIR); \
+	fi
+	@if [ -f thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod ]; then \
 	cp -v thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod $(BUILDDIR); \
 	fi
 	$(FC) $(FFLAGS) -c $< -o $@ $(INCLUDEDIRS)
