@@ -2,7 +2,7 @@
 
 A toolbox for **volume-of-fluid (VOF) based wave generation and active wave absorption** in OpenFOAM, based on the work of Jacobsen, Fuhrman and Fredsøe (2012).
 
-This repository is a **fork of [ogoe/waves2Foam](https://github.com/ogoe/waves2Foam)**, updated and verified to build and run with **OpenFOAM v2406** (OpenFOAM Foundation / OpenFOAM.org).
+This repository is a **fork of [ogoe/waves2Foam](https://github.com/ogoe/waves2Foam)**, updated to build and run with **OpenFOAM v2206 and v2406** (OpenFOAM Foundation / OpenFOAM.org, including the OpenFOAM+ branch). All ThirdParty dependencies are bundled, so a fresh clone compiles out of the box.
 
 ## What is included
 
@@ -11,12 +11,12 @@ This repository is a **fork of [ogoe/waves2Foam](https://github.com/ogoe/waves2F
 | `src/waves2Foam` | Main library: wave theories (Stokes, cnoidal, stream function, irregular, solitary, ...), relaxation zones, wave generation / active absorption boundary conditions |
 | `src/waves2FoamGABC` | Generalized ABC (GABC) boundary conditions (`gabcVelocity`, `gabcPressureRobinV`) |
 | `src/waves2FoamProcessing` | Run-time post-processing: gauges, probes, raw data writers |
-| `src/waves2FoamSampling2406` | Run-time surface elevation sampling for OpenFOAM v2406 (`sampledSurfaceElevation`, `overtopping`) |
+| `src/waves2FoamSampling2206`, `src/waves2FoamSampling2406` | Run-time surface elevation sampling (`sampledSurfaceElevation`, `overtopping`) for the corresponding OpenFOAM version |
 | `src/waves2FoamPorosity` | Porous-media model (Jensen, Jacobsen & Christensen 2014) with resistance-coefficient calibration |
-| `applications/solvers/solvers2206_PLUS`, `applications/solvers/solvers2406_PLUS` | Solvers: `waveFoam` (interFoam-based), `waveIsoFoam`, `porousWaveFoam`, `overWaveDyMFoam` (overset + dynamic mesh) |
+| `applications/solvers/solvers2206_PLUS`, `applications/solvers/solvers2406_PLUS` | Solvers: `waveFoam`, `waveIsoFoam`, `porousWaveFoam`, `overWaveDyMFoam` |
 | `applications/utilities/preProcessing` | Pre-processing tools: `setWaveField`, `setWaveParameters`, `waveGaugesNProbes`, `faceSetToSTL`, `relaxationZoneLayout`, `sampleIncidentWaveField` |
 | `tutorials/` | Example cases for the solvers and relaxation-zone layout |
-| `ThirdParty/` | Third-party dependencies: LAPACK 3.3.1, SPARSKIT2, OceanWave3D, fenton4Foam |
+| `ThirdParty/` | Bundled dependencies: LAPACK 3.3.1, SPARSKIT2, OceanWave3D, fenton4Foam |
 
 ## Getting started
 
@@ -29,15 +29,15 @@ git clone https://github.com/byChen47/waves2Foam.git
 cd waves2Foam
 ```
 
-You can actually clone it anywhere — `bin/bashrc` detects the repository root automatically, so `./Allwmake` works from any location.
+You can actually clone it anywhere — `bin/bashrc` detects the repository root automatically, so `./Allwmake` works from any location. After cloning, go to [Build](#build); to run an example case, see [Usage](#usage).
 
 ## Requirements
 
-* **OpenFOAM v2406** (OpenFOAM.org), built and sourced:
+* **OpenFOAM v2206 or v2406** (OpenFOAM.org), built and sourced:
   ```bash
-  source $HOME/OpenFOAM/<username>-v2406/etc/bashrc
+  source $HOME/OpenFOAM/<username>-v<version>/etc/bashrc
   ```
-  (The user directory is named after your OpenFOAM user, e.g. `chen-v2406` on the machine this fork was developed on. `$WM_PROJECT_USER_DIR` must point to it.)
+  (`$WM_PROJECT_USER_DIR` must point to your OpenFOAM user directory, e.g. `chen-v2206`.)
 * A C++ compiler (`gcc`/`g++`) and GNU `make`
 * `gfortran` (Fortran compiler, required by the ThirdParty libraries)
 * The GNU Scientific Library (GSL)
@@ -84,6 +84,19 @@ cd $WM_PROJECT_USER_DIR/applications/utilities/waves2Foam
 ./Allwmake
 ```
 
+### What `./Allwmake` does
+
+1. **Sets up the environment** by sourcing `bin/bashrc` — defines the `WAVES_*` variables, detects the installed OpenFOAM version and the OpenFOAM+ branch, and selects the matching `solvers<version>_PLUS` / `waves2FoamSampling<version>` sources.
+2. **Builds the ThirdParty dependencies** (`ThirdParty/Allwmake`):
+   - LAPACK 3.3.1 and SPARSKIT2 (static libraries, built from the bundled tarballs)
+   - OceanWave3D (executable + `libOceanWave3D.so`), used for external wave forcing
+   - `fenton4Foam` (executable, for the `fenton` stream-function wave theory)
+3. **Builds the libraries**: `libwaves2Foam.so`, `libwaves2FoamGABC.so`, `libwaves2FoamProcessing.so`, `libwaves2FoamSampling.so`, `libwaves2FoamPorosity.so`.
+4. **Builds the solvers**: `waveFoam`, `waveIsoFoam`, `porousWaveFoam`, `overWaveDyMFoam`.
+5. **Builds the pre-processing utilities**: `setWaveField`, `setWaveParameters`, `waveGaugesNProbes`, `faceSetToSTL`, `relaxationZoneLayout`, `sampleIncidentWaveField`.
+
+Built libraries and executables are installed into `$FOAM_USER_LIBBIN` / `$FOAM_USER_APPBIN` (by default `$HOME/OpenFOAM/<username>-v<version>/platforms/linux64GccDPInt32Opt/lib` and `.../bin`).
+
 ### File permissions (Ubuntu)
 
 `git clone` preserves the executable bits, so `./Allwmake` normally runs right away. If you downloaded the repository as a **ZIP archive** (GitHub's "Download ZIP"), the permissions are lost and you must restore them first:
@@ -100,54 +113,31 @@ ls -l Allwmake
 
 It should show `-rwxr-xr-x`. The same command also works for filesystems that do not store Unix permissions (e.g. shared folders or some USB drives).
 
-`./Allwmake` will:
-
-1. **Set up the environment** by sourcing `bin/bashrc` (defines the `WAVES_*` variables, detects OpenFOAM v2406 and the OpenFOAM+ branch, and selects the matching `solvers2406_PLUS` / `waves2FoamSampling2406` sources).
-2. **Build the ThirdParty dependencies** (`ThirdParty/Allwmake`):
-   - LAPACK 3.3.1 and SPARSKIT2 (static libraries, built from the bundled tarballs)
-   - OceanWave3D (executable + `libOceanWave3D.so`), used for external wave forcing
-   - `fenton4Foam` (executable, for the `fenton` stream-function wave theory)
-3. **Build the libraries**: `libwaves2Foam.so`, `libwaves2FoamGABC.so`, `libwaves2FoamProcessing.so`, `libwaves2FoamSampling.so`, `libwaves2FoamPorosity.so`.
-4. **Build the solvers**: `waveFoam`, `waveIsoFoam`, `porousWaveFoam`, `overWaveDyMFoam`.
-5. **Build the pre-processing utilities**: `setWaveField`, `setWaveParameters`, `waveGaugesNProbes`, `faceSetToSTL`, `relaxationZoneLayout`, `sampleIncidentWaveField`.
-
-Built libraries and executables are installed into `$FOAM_USER_LIBBIN` / `$FOAM_USER_APPBIN` (by default `$HOME/OpenFOAM/<username>-v2406/platforms/linux64GccDPInt32Opt/lib` and `.../bin`).
-
 ### Notes
 
 * **Always build through `./Allwmake`** (or source `bin/bashrc` first). The `WAVES_*` environment variables and the OpenFOAM version macros (`WM_PROJECT_VERSION_NUMBER`, `OFPLUSBRANCH`, ...) must be set; building individual components with `wmake` in a plain shell will silently produce broken compile flags.
 * **OceanWave3D is bundled** in `ThirdParty/OceanWave3D-Fortran90` (source, license and README included), so a fresh clone builds everything without downloading extra sources. If you prefer a different version, replace that directory or set `OCEANWAVE3D_DIR` to the path of your own copy before running `./Allwmake`.
 * If the build is interrupted, `./Allwmake` will pick up where it left off: already-compiled ThirdParty libraries and binaries are detected and skipped.
 
-### OceanWave3D build fix (dash compatibility)
+## Solvers
 
-The bundled OceanWave3D makefile previously used a bash-only redirection (`&> /dev/null`) in its `*.mod` housekeeping steps. On systems where `/bin/sh` is **dash** (the default on Ubuntu/Debian), that construct is parsed differently, so the `then` branch always executed and an unconditional `cp` of `thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod` failed — that file does not exist in the bundled source tree (the only consumer, `StoreDataVTK.f90`, is commented out in `src/IO/makefile.inc`). The failing recipe aborted the OceanWave3D build early:
+Four solvers are provided, each under `applications/solvers/solvers2206_PLUS/` and `applications/solvers/solvers2406_PLUS/`:
 
-```text
-mv: cannot stat '*.mod': No such file or directory
-cp: cannot stat 'thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod': No such file or directory
-make: *** [makefile:132: .../build/precision.o] Error 1
-```
+| Solver | Description |
+|---|---|
+| `waveFoam` | InterFoam-based solver with waves2Foam wave generation / absorption boundary conditions |
+| `waveIsoFoam` | IsoAdvector-based variant of `waveFoam` |
+| `porousWaveFoam` | `waveFoam` extended with the porous-media model |
+| `overWaveDyMFoam` | Overset + dynamic mesh wave solver (see below) |
 
-The missing `libOceanWave3D.so` then caused cascading `-lOceanWave3D` / `-lwaves2Foam` link errors.
+### overWaveDyMFoam
 
-The fix in `ThirdParty/settings/oceanWave3DSettings/makefile`:
+`overWaveDyMFoam` combines the **overset-mesh** and **dynamic-mesh** capabilities of OpenFOAM's `overInterDyMFoam` with the waves2Foam relaxation-zone wave generation and absorption framework. It is aimed at two-phase free-surface simulations on overlapping meshes, and supports VOF interface capturing, dynamic mesh motion, and external wave forcing.
 
-* replaces `&> /dev/null` with the POSIX-compatible `> /dev/null 2>&1`, and
-* only copies `lib_vtk_io.mod` when it actually exists.
+* Source: `applications/solvers/solvers2206_PLUS/overWaveDyMFoam` and `applications/solvers/solvers2406_PLUS/overWaveDyMFoam`
+* Detailed description: `applications/solvers/solvers2206_PLUS/overWaveDyMFoam/README.md`
 
-`./Allwmake` copies this settings makefile over the bundled OceanWave3D source on every run, so fresh clones build out of the box on both bash and dash.
-
-## overWaveDyMFoam
-
-`overWaveDyMFoam` is a bundled solver that combines the **overset-mesh** and **dynamic-mesh** capabilities of OpenFOAM's `overInterDyMFoam` with the waves2Foam relaxation-zone wave generation and absorption framework. It is aimed at two-phase free-surface simulations on overlapping meshes, and supports VOF interface capturing, dynamic mesh motion, and external wave forcing.
-
-It is provided for both OpenFOAM v2206 and v2406:
-
-* `applications/solvers/solvers2206_PLUS/overWaveDyMFoam`
-* `applications/solvers/solvers2406_PLUS/overWaveDyMFoam`
-
-`./Allwmake` discovers and builds it automatically alongside the other solvers (no extra steps needed). See `applications/solvers/solvers2206_PLUS/overWaveDyMFoam/README.md` for a detailed description.
+`./Allwmake` discovers and builds it automatically alongside the other solvers — no extra steps are needed.
 
 ## Usage
 
@@ -161,6 +151,27 @@ It is provided for both OpenFOAM v2206 and v2406:
    waveFoam
    ```
 2. See the individual `tutorials/*/Allrun` scripts for full automated setups.
+
+## Troubleshooting
+
+### OceanWave3D build fails on dash-based systems
+
+The bundled OceanWave3D makefile previously used a bash-only redirection (`&> /dev/null`) in its `*.mod` housekeeping steps. On systems where `/bin/sh` is **dash** (the default on Ubuntu/Debian), that construct is parsed differently, so the `then` branch always executed and an unconditional `cp` of `thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod` failed — that file does not exist in the bundled source tree (the only consumer, `StoreDataVTK.f90`, is commented out in `src/IO/makefile.inc`). The failing recipe aborted the OceanWave3D build early:
+
+```text
+mv: cannot stat '*.mod': No such file or directory
+cp: cannot stat 'thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod': No such file or directory
+make: *** [makefile:132: .../build/precision.o] Error 1
+```
+
+The missing `libOceanWave3D.so` then caused cascading `-lOceanWave3D` / `-lwaves2Foam` link errors.
+
+This is already fixed in `ThirdParty/settings/oceanWave3DSettings/makefile`:
+
+* `&> /dev/null` is replaced with the POSIX-compatible `> /dev/null 2>&1`, and
+* `lib_vtk_io.mod` is only copied when it actually exists.
+
+`./Allwmake` copies this settings makefile over the bundled OceanWave3D source on every run, so fresh clones build out of the box on both bash and dash.
 
 ## References
 
