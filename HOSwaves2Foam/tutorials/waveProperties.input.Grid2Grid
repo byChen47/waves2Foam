@@ -1,0 +1,76 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2206                                  |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+// Template waveProperties.input for the official Grid2Grid coupling
+// (HOS-ocean / HOS-NWT -> libGrid2Grid.so -> libwaves2FoamGrid2Grid.so).
+//
+// Copy to <case>/constant/waveProperties and add to system/controlDict:
+//
+//     libs ( "libwaves2FoamGrid2Grid" );
+//
+// See the module README and the vendored official integration document
+// (doc/Implementation of Grid2Grid in waves2Foam.md) for details.
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      waveProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+seaLevel        0.0;
+
+waveTheory      externalSource;
+
+externalSourceCoeffs
+{
+    // No settings are currently required by externalSource.
+}
+
+relaxationZone
+{
+    relaxationScheme    spatial;
+    relaxationShape     rectangular;
+
+    relaxationShapeCoeffs
+    {
+        // Adapt to your case
+        x      ( 0.0 20.0 );
+        y      ( -1.0 1.0 );
+        z      ( -5.0 0.0 );
+        orientation ( 1 0 0 );
+    }
+}
+
+// Select the Grid2Grid external wave forcing
+externalForcing  Grid2Grid;
+
+Grid2GridCoeffs
+{
+    waveType            Grid2Grid;
+
+    // Ramp time [s]: wave signal is blended in over Tsoft seconds
+    Tsoft               1;
+
+    // Grid2Grid initial time expressed in the OpenFOAM time coordinate
+    referenceTime       -20;
+
+    // Grid2Grid origin expressed in the OpenFOAM coordinate system
+    referencePosition   ( -10 -10 0 );
+
+    // Rotation from OpenFOAM coordinates to Grid2Grid coordinates [deg]
+    referenceTheta      0;
+
+    // Grid2Grid configuration file (in <case>/constant)
+    Grid2GridInputFileName Grid2Grid.dict;
+}
+
+// ************************************************************************* //

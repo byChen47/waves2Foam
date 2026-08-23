@@ -1,0 +1,80 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2206                                  |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+// Same content as waveProperties.input (written by setWaveParameters in the
+// standard workflow).  This file is read directly by setWaveField/waveFoam.
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      waveProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+seaLevel        0.00;
+
+relaxationNames (inlet outlet);
+
+initializationName outlet;
+
+inletCoeffs
+{
+    waveType    externalSource;
+
+    Tsoft       1;
+
+    depth       0.400000;
+
+    relaxationZone
+    {
+        relaxationScheme Spatial;
+        relaxationShape  Rectangular;
+        beachType        Empty;
+
+        relaxType   INLET;
+        startX      ( 0 0 -1 );
+        endX        ( 5 0  1 );
+        orientation ( 1.0 0.0 0.0 );
+    }
+};
+
+outletCoeffs
+{
+    waveType    potentialCurrent;
+    U           ( 0 0 0 );
+    Tsoft       1;
+
+    relaxationZone
+    {
+        relaxationScheme Spatial;
+        relaxationShape  Rectangular;
+        beachType        Empty;
+
+        relaxType   OUTLET;
+        startX      ( 13 0 -1 );
+        endX        ( 18 0  1 );
+        orientation ( 1.0 0.0 0.0 );
+    }
+};
+
+externalForcing  Grid2Grid;
+
+Grid2GridCoeffs
+{
+    waveType            Grid2Grid;
+    Tsoft               1;
+    referenceTime       0;
+    referencePosition   ( 5 0 0 );
+    referenceTheta      0;
+    Grid2GridInputFileName Grid2Grid.dict;
+}
+
+// ************************************************************************* //

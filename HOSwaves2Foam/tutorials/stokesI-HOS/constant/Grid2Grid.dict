@@ -1,0 +1,66 @@
+#-------------------------------------------------------------------------- #
+#
+#                  Grid2Grid Dictionary Input File
+#
+#-------------------------------------------------------------------------- #
+
+// Select the HOS model that produced the mode file
+Grid2Grid       HOSNWT;
+
+writeVTK                false;
+writeWaveProbe          false;
+writeVelocityProbe      false;
+writePressureProbe      false;
+
+zMesh
+{
+    // Cover the relaxation-zone water column (-100 m) plus air above
+    zMin           -100.0;
+    zMax            5.0;
+
+    nZMin           33;
+    nZMax           15;
+
+    zMeshType         uniform;
+    zMinRatio       3.0;
+    zMaxRatio       3.0;
+}
+
+HOSOcean
+{
+    type            Ocean;
+    filePath        constant/modes_HOS_Ocean.dat;
+    extraInterpolationNumber 1;
+    interpolationOrder  3;
+    $zMesh
+    writeLog        TRUE;
+    cutAtElevation  FALSE;
+}
+
+HOSNWT
+{
+    type            NWT;
+
+    // Mode file produced by the HOS-NWT case in HOS-NWT/
+    filePath        constant/modes_HOS_SWENSE.dat;
+
+    procedure       velocity;
+
+    extraInterpolationNumber 2;
+    interpolationOrder  3;
+
+    $zMesh
+
+    writeLog        TRUE;
+}
+
+simulation
+{
+    startTime       0.0;
+    endTime		    60.0;
+    dt              0.01;
+}
+
+/* ------------------------------------------------------------------------- *\
+#                                END OF FILE
+\* ------------------------------------------------------------------------- */

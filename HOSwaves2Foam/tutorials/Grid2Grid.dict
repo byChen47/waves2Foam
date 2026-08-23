@@ -1,0 +1,73 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2206                                  |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+// Template Grid2Grid.dict (place in <case>/constant).
+// This is the configuration read by libGrid2Grid.so at run-time through
+// Foam::waveTheories::Grid2Grid.  Adapt the zMesh bounds, the HOS mode file
+// path and the interpolation settings to your HOS-ocean / HOS-NWT run.
+
+// Select which HOS model the mode file comes from
+//Grid2Grid       HOSOcean;
+Grid2Grid       HOSNWT;
+
+writeVTK                false;
+writeWaveProbe          false;
+writeVelocityProbe      false;
+writePressureProbe      false;
+
+zMesh
+{
+    zMin           -5.0;
+    zMax            0.5;
+
+    nZMin           21;
+    nZMax           21;
+
+    // uniform | meshRatio (finer near the free surface)
+    zMeshType         uniform;
+
+    zMinRatio       3.0;        // if zMeshType = meshRatio
+    zMaxRatio       3.0;
+}
+
+HOSOcean
+{
+    type            Ocean;
+
+    // Path to the HOS-ocean mode/result file
+    filePath        constant/modes_HOS_Ocean.dat;
+
+    extraInterpolationNumber 1;
+    interpolationOrder  3;      // 1: Linear, 2: Quadratic, 3: Cubic
+
+    $zMesh
+
+    writeLog        TRUE;
+    cutAtElevation  FALSE;
+}
+
+HOSNWT
+{
+    type            NWT;
+
+    // Path to the HOS-NWT mode/result file
+    filePath        constant/modes_HOS_NWT.dat;
+
+    procedure       velocity;   // velocity | potential
+
+    extraInterpolationNumber 2;
+    interpolationOrder  3;
+
+    $zMesh
+
+    writeLog        TRUE;
+}
+
+/* ------------------------------------------------------------------------- *\
+#                                END OF FILE
+\* ------------------------------------------------------------------------- */

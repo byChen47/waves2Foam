@@ -1,0 +1,37 @@
+#!/bin/bash
+#
+# Run the small waveFoam case with the official Grid2Grid coupling
+# (HOS-NWT -> libGrid2Grid.so -> libwaves2FoamGrid2Grid.so).
+#
+# Prerequisites (see the module README):
+#   1. libGrid2Grid.so and libwaves2FoamGrid2Grid.so built and installed
+#   2. HOS-NWT run finished (../HOS-NWT/Results/modes_HOS_SWENSE.dat) and
+#      copied to constant/modes_HOS_SWENSE.dat (already included)
+#   3. OpenFOAM + waves2Foam environment sourced (bin/bashrc)
+
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+
+# Resolve the waves2Foam root (this case lives in HOSwaves2Foam/tutorials/waveFoam-HOS)
+if [ -z "$WAVES_DIR" ]
+then
+    WAVES_DIR="$(cd ../../.. && pwd)"
+fi
+. $WAVES_DIR/bin/bashrc noPrint
+
+# Prepare the 0 directory (OpenFOAM v2206, OpenFOAM+ branch)
+mkdir -p 0
+rm -f 0/*
+sed 's/object      alpha.org;/object      alpha.water;/' < 0.org/alpha1.org > 0/alpha.water
+cp 0.org/p_rgh.1706.org 0/p_rgh
+cp 0.org/U.org 0/U
+
+# Version-specific fvSchemes/fvSolution (OpenFOAM+ >= 1706)
+cp system/fvFiles/fvSchemes.1706 system/fvSchemes
+cp system/fvFiles/fvSolution.1706 system/fvSolution
+
+# Transport properties
+cp $WAVES_DIR/tutorials/commonFiles/transportProperties.23 constant/transportProperties
+
+runApplication blockMesh
+runApplication setWaveField
+runApplication waveFoam

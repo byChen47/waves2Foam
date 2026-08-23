@@ -2,22 +2,41 @@
 
 A toolbox for **volume-of-fluid (VOF) based wave generation and active wave absorption** in OpenFOAM, based on the work of Jacobsen, Fuhrman and Fredsøe (2012).
 
-This repository is a **fork of [ogoe/waves2Foam](https://github.com/ogoe/waves2Foam)**, updated to build and run with **OpenFOAM v2206 and v2406** (OpenFOAM Foundation / OpenFOAM.org, including the OpenFOAM+ branch). All ThirdParty dependencies are bundled, so a fresh clone compiles out of the box.
+This repository is a **fork of [ogoe/waves2Foam](https://github.com/ogoe/waves2Foam)** that adds:
 
-## What is included
+* **HOS (Higher-Order Spectral) wave generation** — HOS-NWT / HOS-ocean + Grid2Grid bridged into the waves2Foam relaxation zones (`HOSwaves2Foam/`), with regular- and irregular-wave tutorial cases;
+* **`overWaveDyMFoam`** — an overset + dynamic-mesh wave solver;
+* support for **OpenFOAM v2206 and v2406** (OpenFOAM+ branch), with all ThirdParty dependencies bundled so a fresh clone compiles out of the box.
 
-| Component | Description |
-|---|---|
-| `src/waves2Foam` | Main library: wave theories (Stokes, cnoidal, stream function, irregular, solitary, ...), relaxation zones, wave generation / active absorption boundary conditions |
-| `src/waves2FoamGABC` | Generalized ABC (GABC) boundary conditions (`gabcVelocity`, `gabcPressureRobinV`) |
-| `src/waves2FoamProcessing` | Run-time post-processing: gauges, probes, raw data writers |
-| `src/waves2FoamSampling2206`, `src/waves2FoamSampling2406` | Run-time surface elevation sampling (`sampledSurfaceElevation`, `overtopping`) for the corresponding OpenFOAM version |
-| `src/waves2FoamPorosity` | Porous-media model (Jensen, Jacobsen & Christensen 2014) with resistance-coefficient calibration |
-| `applications/solvers/solvers2206_PLUS`, `applications/solvers/solvers2406_PLUS` | Solvers: `waveFoam`, `waveIsoFoam`, `porousWaveFoam`, `overWaveDyMFoam` |
-| `applications/utilities/preProcessing` | Pre-processing tools: `setWaveField`, `setWaveParameters`, `waveGaugesNProbes`, `faceSetToSTL`, `relaxationZoneLayout`, `sampleIncidentWaveField` |
-| `tutorials/` | Example cases for the solvers and relaxation-zone layout |
-| `ThirdParty/` | Bundled dependencies: LAPACK 3.3.1, SPARSKIT2, OceanWave3D, fenton4Foam |
-| `doc/` | waves2Foam manual (`manualWaves2Foam_v090.pdf`), OceanWave3D coupling memo, source-code structure |
+## Repository structure
+
+```text
+waves2Foam/
+├── Allwmake / Allwclean        # build / clean everything, including HOSwaves2Foam
+├── bin/                        # environment (bin/bashrc) and case preparation scripts
+├── src/
+│   ├── waves2Foam/             # core library: wave theories, relaxation zones, wave BCs
+│   ├── waves2FoamGABC/         # generalized ABC boundary conditions (gabcVelocity, ...)
+│   ├── waves2FoamProcessing/   # run-time post-processing: gauges, probes, spectral analysis
+│   ├── waves2FoamSampling2206/ # surface-elevation sampling (OpenFOAM v2206)
+│   ├── waves2FoamSampling2406/ # surface-elevation sampling (OpenFOAM v2406)
+│   └── waves2FoamPorosity/     # porous-media model
+├── applications/
+│   ├── solvers/solvers2206_PLUS/  # waveFoam, waveIsoFoam, porousWaveFoam, overWaveDyMFoam
+│   ├── solvers/solvers2406_PLUS/  # same solvers for OpenFOAM v2406
+│   └── utilities/                 # setWaveField, setWaveParameters, waveGaugesNProbes, ...
+├── tutorials/                  # standard waves2Foam tutorial cases
+├── ThirdParty/                 # LAPACK 3.3.1, SPARSKIT2, OceanWave3D, fenton4Foam
+├── HOSwaves2Foam/              # HOS coupling module (see below)
+│   ├── src/HOS-NWT/            #   vendored HOS-NWT source (numerical wave tank)
+│   ├── src/HOS-ocean/          #   vendored HOS-ocean source (open ocean)
+│   ├── src/Grid2Grid/          #   waves2Foam Grid2Grid coupling library
+│   ├── ThirdParty/             #   vendored FFTW3 + LAPACK/BLAS build dependencies
+│   ├── scripts/                #   buildHOS.sh, buildGrid2Grid.sh
+│   ├── tutorials/              #   HOS-NWT, waveFoam-HOS, irregular, stokesI-HOS cases
+│   └── doc/                    #   使用说明.md, HOS-Grid2Grid参数详解.md, ...
+└── doc/                        # waves2Foam manual, source-code structure, memos
+```
 
 ## Getting started
 
@@ -40,7 +59,8 @@ You can actually clone it anywhere — `bin/bashrc` detects the repository root 
   ```
   (`$WM_PROJECT_USER_DIR` must point to your OpenFOAM user directory, e.g. `chen-v2206`.)
 * A C++ compiler (`gcc`/`g++`) and GNU `make`
-* `gfortran` (Fortran compiler, required by the ThirdParty libraries)
+* `gfortran` (Fortran compiler, required by the ThirdParty libraries and the HOS models)
+* `cmake` (required by the HOS models; the vendored FFTW3/LAPACK need no system install)
 * The GNU Scientific Library (GSL)
 * [IHFoam](https://github.com/phicau/IHFOAM) — provides the `waveModels` library required by `waveFoam`
 
@@ -95,8 +115,9 @@ cd $WM_PROJECT_USER_DIR/applications/utilities/waves2Foam
 3. **Builds the libraries**: `libwaves2Foam.so`, `libwaves2FoamGABC.so`, `libwaves2FoamProcessing.so`, `libwaves2FoamSampling.so`, `libwaves2FoamPorosity.so`.
 4. **Builds the solvers**: `waveFoam`, `waveIsoFoam`, `porousWaveFoam`, `overWaveDyMFoam`.
 5. **Builds the pre-processing utilities**: `setWaveField`, `setWaveParameters`, `waveGaugesNProbes`, `faceSetToSTL`, `relaxationZoneLayout`, `sampleIncidentWaveField`.
+6. **Builds the HOSwaves2Foam coupling**: HOS-NWT + HOS-ocean (`HOSwaves2Foam/scripts/buildHOS.sh`), Grid2Grid (`scripts/buildGrid2Grid.sh`) and `libwaves2FoamGrid2Grid.so` (`wmake`). Already-built HOS binaries / installed libraries are detected and skipped.
 
-Built libraries and executables are installed into `$FOAM_USER_LIBBIN` / `$FOAM_USER_APPBIN` (by default `$HOME/OpenFOAM/<username>-v<version>/platforms/linux64GccDPInt32Opt/lib` and `.../bin`).
+Built libraries and executables are installed into `$FOAM_USER_LIBBIN` / `$FOAM_USER_APPBIN` (by default `$HOME/OpenFOAM/<username>-v<version>/platforms/linux64GccDPInt32Opt/lib` and `.../bin`). `./Allwclean` cleans everything, including the HOS build artifacts and coupling libraries.
 
 ### File permissions (Ubuntu)
 
@@ -140,6 +161,43 @@ Four solvers are provided, each under `applications/solvers/solvers2206_PLUS/` a
 
 `./Allwmake` discovers and builds it automatically alongside the other solvers — no extra steps are needed.
 
+## HOS wave coupling (HOSwaves2Foam)
+
+`HOSwaves2Foam/` implements wave generation with **Higher-Order Spectral (HOS)**
+potential-flow models (HOS-NWT / HOS-ocean, LHEEA-ECN), bridged to the CFD
+domain through **Grid2Grid** and the waves2Foam relaxation zones:
+
+```text
+HOS-NWT / HOS-ocean  ->  Grid2Grid (libGrid2Grid.so)
+                    ->  libwaves2FoamGrid2Grid.so  ->  waveFoam relaxation zone
+```
+
+The HOS models and all build dependencies (FFTW3, LAPACK/BLAS) are vendored,
+so everything compiles with two commands (and is also built automatically by
+`./Allwmake`, step 6 above):
+
+```bash
+bash HOSwaves2Foam/scripts/buildHOS.sh          # HOS-NWT + HOS-ocean
+bash HOSwaves2Foam/scripts/buildGrid2Grid.sh    # libGrid2Grid.so -> $FOAM_USER_LIBBIN
+cd HOSwaves2Foam/src/Grid2Grid && wmake libso   # libwaves2FoamGrid2Grid.so
+```
+
+Tutorial cases (each already contains its HOS-NWT SWENSE mode file and runs
+out of the box with `Allrun`):
+
+| Case | Waves |
+|---|---|
+| `HOSwaves2Foam/tutorials/waveFoam-HOS` | Regular wave (A = 0.05 m, T = 2 s) |
+| `HOSwaves2Foam/tutorials/waveFoam-HOS-Irregular` | Irregular waves (JONSWAP, Hs = 0.05 m, Tp = 1 s) |
+| `HOSwaves2Foam/tutorials/stokesI-HOS` | Large 624 m tank, Stokes-I-equivalent regular wave (H = 0.05 m, T = 3 s), converted from the original `StokesI` (IHFoam) setup to HOS |
+| `HOSwaves2Foam/tutorials/HOS-NWT` / `HOS-NWT-Irregular` | HOS-NWT generator cases for the regular / irregular waves above |
+
+Documentation (Chinese):
+
+* [`HOSwaves2Foam/doc/使用说明.md`](HOSwaves2Foam/doc/使用说明.md) — complete usage guide, line-by-line configuration explanation and wave-field setup;
+* [`HOSwaves2Foam/doc/HOS-Grid2Grid参数详解.md`](HOSwaves2Foam/doc/HOS-Grid2Grid参数详解.md) — full Grid2Grid parameter reference;
+* each tutorial case has its own `README.md`.
+
 ## Usage
 
 1. Copy a tutorial case, e.g.
@@ -152,27 +210,6 @@ Four solvers are provided, each under `applications/solvers/solvers2206_PLUS/` a
    waveFoam
    ```
 2. See the individual `tutorials/*/Allrun` scripts for full automated setups.
-
-## Troubleshooting
-
-### OceanWave3D build fails on dash-based systems
-
-The bundled OceanWave3D makefile previously used a bash-only redirection (`&> /dev/null`) in its `*.mod` housekeeping steps. On systems where `/bin/sh` is **dash** (the default on Ubuntu/Debian), that construct is parsed differently, so the `then` branch always executed and an unconditional `cp` of `thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod` failed — that file does not exist in the bundled source tree (the only consumer, `StoreDataVTK.f90`, is commented out in `src/IO/makefile.inc`). The failing recipe aborted the OceanWave3D build early:
-
-```text
-mv: cannot stat '*.mod': No such file or directory
-cp: cannot stat 'thirdpartylibs/LIB_VTK_IO/static/lib_vtk_io.mod': No such file or directory
-make: *** [makefile:132: .../build/precision.o] Error 1
-```
-
-The missing `libOceanWave3D.so` then caused cascading `-lOceanWave3D` / `-lwaves2Foam` link errors.
-
-This is already fixed in `ThirdParty/settings/oceanWave3DSettings/makefile`:
-
-* `&> /dev/null` is replaced with the POSIX-compatible `> /dev/null 2>&1`, and
-* `lib_vtk_io.mod` is only copied when it actually exists.
-
-`./Allwmake` copies this settings makefile over the bundled OceanWave3D source on every run, so fresh clones build out of the box on both bash and dash.
 
 ## References
 

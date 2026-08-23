@@ -1,0 +1,35 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.5                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      loggingProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+surfaceElevationAnyName
+{
+    type waveGauge;
+
+    pointDistribution lineDistribution;
+    N 2;
+    linestart (-50 0 -5);
+    lineend   ( 50 0 -5);
+    add       ( 0 10 0);
+    axis      z;
+    stretch 1.;
+
+    // REQURIED ONLY FOR NEW FUNCTIONOBJECT IMPLEMENTATION
+    writeControl adjustableRunTime;
+    writeInterval 0.01;
+}
+
+
+// ************************************************************************* //

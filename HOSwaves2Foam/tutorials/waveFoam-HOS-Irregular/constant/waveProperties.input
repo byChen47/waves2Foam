@@ -1,0 +1,94 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2206                                  |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+// Small waveFoam case using the official Grid2Grid coupling with
+// IRREGULAR waves (HOS-NWT JONSWAP spectrum -> libGrid2Grid.so ->
+// libwaves2FoamGrid2Grid.so).
+// The HOS mode file is produced by the companion irregular HOS-NWT case
+// (../HOS-NWT-Irregular) and copied to constant/modes_HOS_SWENSE.dat.
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      waveProperties.input;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+seaLevel        0.00;
+
+relaxationNames (inlet outlet);
+
+initializationName outlet;
+
+inletCoeffs
+{
+    waveType    externalSource;
+
+    Tsoft       1;
+
+    depth       0.400000;
+
+    relaxationZone
+    {
+        relaxationScheme Spatial;
+        relaxationShape  Rectangular;
+        beachType        Empty;
+
+        relaxType   INLET;
+        startX      ( 0 0 -1 );
+        endX        ( 5 0  1 );
+        orientation ( 1.0 0.0 0.0 );
+    }
+};
+
+outletCoeffs
+{
+    waveType    potentialCurrent;
+    U           ( 0 0 0 );
+    Tsoft       1;
+
+    relaxationZone
+    {
+        relaxationScheme Spatial;
+        relaxationShape  Rectangular;
+        beachType        Empty;
+
+        relaxType   OUTLET;
+        startX      ( 13 0 -1 );
+        endX        ( 18 0  1 );
+        orientation ( 1.0 0.0 0.0 );
+    }
+};
+
+// Select the Grid2Grid external wave forcing
+externalForcing  Grid2Grid;
+
+Grid2GridCoeffs
+{
+    waveType            Grid2Grid;
+
+    // Ramp time [s]
+    Tsoft               1;
+
+    // HOS-NWT time axis starts at 0 (including the wavemaker ramp)
+    referenceTime       0;
+
+    // HOS tank origin mapped to the OF domain: OF x=0 -> HOS x=5
+    referencePosition   ( 5 0 0 );
+
+    // Rotation from OpenFOAM coordinates to Grid2Grid coordinates [deg]
+    referenceTheta      0;
+
+    // Grid2Grid configuration file in <case>/constant
+    Grid2GridInputFileName Grid2Grid.dict;
+}
+
+// ************************************************************************* //

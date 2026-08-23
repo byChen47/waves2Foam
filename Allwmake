@@ -204,6 +204,37 @@ fi
 
 echo ""
 echo "====================================="
+echo "    COMPILE HOSwaves2Foam"
+echo "====================================="
+
+if [ -d "$WAVES_DIR/HOSwaves2Foam" ]
+then
+    echo ""
+    echo "HOSwaves2Foam found, building HOS wave models, Grid2Grid and"
+    echo "the waves2Foam Grid2Grid coupling library."
+    echo ""
+
+    # HOS wave models (HOS-NWT + HOS-ocean) using the vendored
+    # FFTW3/LAPACK dependencies.  Skipped automatically if already built;
+    # requires cmake and gfortran.
+    ( cd $WAVES_DIR/HOSwaves2Foam && bash scripts/buildHOS.sh ) \
+        || echo "Warning: HOS model build failed (cmake/gfortran required?)"
+
+    # Grid2Grid data-bridge library -> $FOAM_USER_LIBBIN
+    ( cd $WAVES_DIR/HOSwaves2Foam && bash scripts/buildGrid2Grid.sh ) \
+        || echo "Warning: Grid2Grid build failed"
+
+    # waves2Foam coupling library (needs libwaves2Foam.so from above)
+    ( cd $WAVES_DIR/HOSwaves2Foam/src/Grid2Grid && wmake libso ) \
+        || echo "Warning: libwaves2FoamGrid2Grid build failed"
+else
+    echo ""
+    echo "HOSwaves2Foam not found, skipping."
+    echo ""
+fi
+
+echo ""
+echo "====================================="
 echo "    COMPILE BREEDER"
 echo "====================================="
 

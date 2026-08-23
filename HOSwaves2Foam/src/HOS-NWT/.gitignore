@@ -1,0 +1,30 @@
+# ignore obj directory
+obj/
+# ignore bin folder except input and and .inp example
+bin/*
+!bin/input_HOS-NWT.dat
+!bin/prob.inp
+!bin/pres.inp
+# ignore backup files + Mac specific files
+*~
+sources/*/*~
+sources/*/*.orig
+.DS_Store
+# ignore Benchmark except benchmark.sh
+Benchmark/*~
+Benchmark/tecplot.phy
+#!Benchmark/*.sh
+# More clever way to do this?
+Benchmark/*/Results
+Benchmark/*/tecplot.phy
+Benchmark/Irreg_3D/CAT1__22.cfg
+Benchmark/Irreg_3D/CAT1__22.dat
+# ignore tecplot tmp files
+tecplot.phy
+# ignore PostProcessing/obj directory
+sources/PostProcessing/obj/
+# ignore PostProcessing/bin directory except input
+sources/PostProcessing/bin/*
+!sources/PostProcessing/bin/input_post_process.dat
+build
+install

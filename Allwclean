@@ -35,6 +35,22 @@ echo "====================================="
 (cd $WAVES_DIR/applications/utilities; wclean all)
 
 
+## HOSwaves2Foam
+echo ""
+echo "====================================="
+echo "    CLEAN HOSwaves2Foam"
+echo "====================================="
+
+# HOS wave model build directories
+rm -rf $WAVES_DIR/HOSwaves2Foam/src/HOS-NWT/build
+rm -rf $WAVES_DIR/HOSwaves2Foam/src/HOS-ocean/build
+
+# Grid2Grid and waves2Foam coupling libraries
+rm -rf $WAVES_DIR/HOSwaves2Foam/src/Grid2Grid/Make/linux64GccDPInt32Opt
+rm -f $FOAM_USER_LIBBIN/libGrid2Grid.so
+rm -f $FOAM_USER_LIBBIN/libwaves2FoamGrid2Grid.so
+
+
 echo ""
 echo "====================================="
 echo "    CLEAN DONE"
