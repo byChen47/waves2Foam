@@ -190,6 +190,7 @@ out of the box with `Allrun`):
 | `HOSwaves2Foam/tutorials/waveFoam-HOS` | Regular wave (A = 0.05 m, T = 2 s) |
 | `HOSwaves2Foam/tutorials/waveFoam-HOS-Irregular` | Irregular waves (JONSWAP, Hs = 0.05 m, Tp = 1 s) |
 | `HOSwaves2Foam/tutorials/stokesI-HOS` | Large 624 m tank, Stokes-I-equivalent regular wave (H = 0.05 m, T = 3 s), converted from the original `StokesI` (IHFoam) setup to HOS |
+| `HOSwaves2Foam/tutorials/stokesI-HOS-3D` | 3D oblique-wave version of stokesI-HOS (20 m wide, 15 deg, n2 = 8) |
 | `HOSwaves2Foam/tutorials/HOS-NWT` / `HOS-NWT-Irregular` | HOS-NWT generator cases for the regular / irregular waves above |
 
 Documentation (Chinese):

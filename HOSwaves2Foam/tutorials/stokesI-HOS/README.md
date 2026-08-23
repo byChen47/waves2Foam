@@ -10,6 +10,15 @@ T = 3 s）造波设置改造成 **HOS 造波**（HOS-NWT → Grid2Grid → waves
 入口松弛区在 x = -312..-282 m 注入 HOS 波浪，出口松弛区
 x = 282..312 m 消波，模拟 30 s。
 
+## 运行顺序（两步流程）
+
+```text
+第 1 步（可选）：HOS-NWT 造波（HOS-NWT/ 子算例，生成 modes_HOS_SWENSE.dat）
+第 2 步：bash ./Allrun（CFD 计算）
+```
+
+`constant/modes_HOS_SWENSE.dat` 已内置（88 MB），直接跑第 2 步即可。
+
 ## 目录结构
 
 ```text

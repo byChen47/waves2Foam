@@ -19,16 +19,16 @@ surfaceElevationAnyName
     type waveGauge;
 
     pointDistribution lineDistribution;
-    N 179;
-    linestart (0.10 -0.3 0.05);
-    lineend   (17.9 -0.3 0.05);
-    add       ( 0 0.45 0);
-    axis      y;
+    N 18;
+    linestart (0.10 0 -0.4);
+    lineend   (17.9 0 -0.4);
+    add       ( 0 0 0.5);
+    axis      z;
     stretch 1.;
 
     // REQURIED ONLY FOR NEW FUNCTIONOBJECT IMPLEMENTATION
     writeControl adjustableRunTime;
-    writeInterval 0.025;
+    writeInterval 0.5;
 }
 
 

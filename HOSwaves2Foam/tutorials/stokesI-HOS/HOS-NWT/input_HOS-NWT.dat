@@ -35,7 +35,7 @@ Absorption numerical beach   :: iabsnb           :: 1
 Beginning front num. beach   :: xabsf            :: 0.75d0
 Absorption strength front    :: coeffabsf        :: 1.d0
 ------------- Elevation/Velocity-Pressure probes --------------
-Use of probes                :: iprobes          :: 0
+Use of probes                :: iprobes          :: 1
 Filename of probe positions  :: pro_file         :: prob.inp
 ---------------------- Time-integration -----------------------
 Duration of the simulation   :: T_stop           :: 60.0d0

@@ -7,6 +7,19 @@
 入口松弛区（x=0..5 m）把 HOS 波浪场注入 CFD，出口松弛区（x=13..18 m）
 吸收波浪防止反射。模拟 8 s，入口区出现振幅约 0.05 m、周期 2 s 的规则波。
 
+## 运行顺序（两步流程中的第 2 步）
+
+完整流程是 **“先 HOS 造波，再 OpenFOAM 计算”**：
+
+```text
+第 1 步（可选）：运行 ../HOS-NWT 生成波浪数据
+                → cp Results/modes_HOS_SWENSE.dat constant/
+第 2 步（本算例）：bash ./Allrun（blockMesh → setWaveField → waveGaugesNProbes → waveFoam）
+```
+
+本算例已内置 `constant/modes_HOS_SWENSE.dat`，**直接跑第 2 步即可**；
+只有修改波高/周期等参数时，才需要先重跑第 1 步并把新数据拷进来。
+
 ## 目录结构
 
 ```text

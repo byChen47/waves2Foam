@@ -21,6 +21,8 @@ runApplication blockMesh
 
 runApplication setWaveField
 
+runApplication waveGaugesNProbes
+
 runApplication waveFoam
 
 # Parallel production runs (after enabling refinement):

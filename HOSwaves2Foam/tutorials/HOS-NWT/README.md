@@ -9,6 +9,18 @@
 水池参数：20 m（长）× 1 m（宽）× 0.4 m（水深），规则波振幅 0.05 m、
 周期 2 s（波高 0.1 m）。
 
+## 运行顺序（两步流程中的第 1 步）
+
+本套教程的完整流程是 **“先 HOS 造波，再 OpenFOAM 计算”**：
+
+```text
+第 1 步（本算例）：HOS-NWT 生成波浪数据 → Results/modes_HOS_SWENSE.dat
+第 2 步：waveFoam-HOS 用这份数据跑 CFD（Allrun）
+```
+
+`waveFoam-HOS/constant/` 里已内置同一份数据，**不换波浪参数时可以跳过
+本步**，直接运行第 2 步。
+
 ## 目录结构
 
 ```text

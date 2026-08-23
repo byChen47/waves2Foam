@@ -1,0 +1,32 @@
+#!/bin/sh
+cd "${0%/*}" || exit                                # Run from this directory
+. ${WM_PROJECT_DIR:?}/bin/tools/RunFunctions        # Tutorial run functions
+#------------------------------------------------------------------------------
+
+restore0Dir
+
+runApplication blockMesh
+
+# Optional: free-surface mesh refinement (production runs).
+# The four refineMesh passes multiply the cell count by ~256; the base
+# 156x1x33 mesh is too coarse to resolve a 0.05 m wave, so enable these
+# for meaningful results:
+# for i in 1 2 3 4
+# do
+#     runApplication -s "$i" \
+#         topoSet -dict system/topoSetDict.${i}
+#     runApplication -s "$i" \
+#         refineMesh -dict system/refineMeshDict.xz -overwrite
+# done
+
+runApplication setWaveField
+
+runApplication waveGaugesNProbes
+
+runApplication waveFoam
+
+# Parallel production runs (after enabling refinement):
+# runApplication decomposePar
+# runApplication mpirun -np 8 waveFoam -parallel
+
+#------------------------------------------------------------------------------

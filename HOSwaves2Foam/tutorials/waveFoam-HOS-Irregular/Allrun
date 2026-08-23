@@ -36,4 +36,5 @@ cp $WAVES_DIR/tutorials/commonFiles/transportProperties.23 constant/transportPro
 
 runApplication blockMesh
 runApplication setWaveField
+runApplication waveGaugesNProbes
 runApplication waveFoam

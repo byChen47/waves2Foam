@@ -1,0 +1,78 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.5                                   |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      waveProperties.input;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Same content as waveProperties (kept for reference; setWaveParameters is
+// not used because the Grid2Grid coefficients are written by hand).
+
+seaLevel        0.00;
+
+relaxationNames (inlet outlet);
+
+initializationName outlet;
+
+inletCoeffs
+{
+    waveType    externalSource;
+
+    Tsoft       3;
+
+    depth       100.0;
+
+    relaxationZone
+    {
+        relaxationScheme Spatial;
+        relaxationShape  Rectangular;
+        beachType        Empty;
+
+        relaxType   INLET;
+        startX      ( -312 0.5 -100 );
+        endX        ( -282 19.5 5 );
+        orientation ( 1.0 0.0 0.0 );
+    }
+};
+
+outletCoeffs
+{
+    waveType    potentialCurrent;
+    U           ( 0 0 0 );
+    Tsoft       3;
+
+    relaxationZone
+    {
+        relaxationScheme Spatial;
+        relaxationShape  Rectangular;
+        beachType        Empty;
+
+        relaxType   OUTLET;
+        startX      ( 312 0.5 -100 );
+        endX        ( 282 19.5 5 );
+        orientation ( 1.0 0.0 0.0 );
+    }
+};
+
+externalForcing  Grid2Grid;
+
+Grid2GridCoeffs
+{
+    waveType            Grid2Grid;
+    Tsoft               3;
+    referenceTime       0;
+    referencePosition   ( 332 0 0 );
+    referenceTheta      0;
+    Grid2GridInputFileName Grid2Grid.dict;
+}
+
+// ************************************************************************* //

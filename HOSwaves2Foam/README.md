@@ -54,10 +54,15 @@ HOSwaves2Foam/
 │   ├── waveProperties.input.Grid2Grid   # waveProperties template
 │   ├── Grid2Grid.dict                   # Grid2Grid configuration template
 │   ├── HOS-NWT/                         # HOS-NWT wave generation case
-│   └── waveFoam-HOS/                    # waveFoam + Grid2Grid coupling case
+│   ├── waveFoam-HOS/                    # waveFoam + Grid2Grid coupling case
+│   ├── HOS-NWT-Irregular/               # irregular-wave HOS-NWT case
+│   ├── waveFoam-HOS-Irregular/          # irregular-wave coupling case
+│   ├── stokesI-HOS/                     # large-tank case converted from StokesI
+│   └── stokesI-HOS-3D/                  # 3D oblique-wave version (n2 = 8)
 └── scripts/
     ├── buildGrid2Grid.sh                # build + install libGrid2Grid.so
-    └── buildHOS.sh                      # build HOS-NWT + HOS-ocean
+    ├── buildHOS.sh                      # build HOS-NWT + HOS-ocean (2D)
+    └── buildHOS3D.sh                    # build 3D HOS-NWT (n1, n2 configurable)
 ```
 
 ## Official Grid2Grid coupling
@@ -201,6 +206,23 @@ bash ./Allrun
 The base 156x1x33 mesh is coarse on purpose: uncomment the four
 `topoSet`/`refineMesh` passes in `Allrun` for production runs that resolve
 the free surface.
+
+### `tutorials/stokesI-HOS-3D/`
+
+The same 624 m tank widened to **20 m (y = 0.5..19.5 m)** and driven by a
+**3D oblique regular wave** (15 deg, n2 = 8 y-modes).  The 3D HOS-NWT
+executable is built separately (the 2D tutorials keep n2 = 1):
+
+```bash
+bash HOSwaves2Foam/scripts/buildHOS3D.sh   # n1=128, n2=8 -> build3D/HOS_NWT
+cd HOSwaves2Foam/tutorials/stokesI-HOS-3D
+bash ./Allrun
+```
+
+Important: `constant/Grid2Grid.dict` sets **`addedMode false`** — Grid2Grid's
+3D (n2 > 1) added-mode reconstruction is defective (spurious velocities that
+grow linearly in time); disabling the added modes fixes it.  The SWENSE mode
+file (89 MB) is already included.
 
 ### Pitfalls found while setting up the tutorial
 
