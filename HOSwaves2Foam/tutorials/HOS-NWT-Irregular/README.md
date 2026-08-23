@@ -8,11 +8,16 @@
 水池与 `HOS-NWT` 算例相同（20 m × 1 m × 0.4 m），波浪参数：
 有义波高 Hs = 0.05 m、谱峰周期 Tp = 1 s、峰升因子 γ = 3.3。
 
-## 运行顺序（两步流程中的第 1 步）
+## 运行流程（从哪一步开始）
 
-与规则波一样：**先本算例造波，再运行 `waveFoam-HOS-Irregular`（第 2 步）**。
-`waveFoam-HOS-Irregular` 已内置同一份不规则波数据，换谱参数时才需要
-重跑本步。
+本算例是两步流程中的**第 3 步：HOS 造波**（不规则波）——只有修改谱参数
+时才需要运行；日常跑 CFD 直接去 `waveFoam-HOS-Irregular` 执行第 4 步。
+完整流程见 [tutorials/README.md](../README.md)。
+
+```text
+第 3 步（本算例）：HOS-NWT 造不规则波 → Results/modes_HOS_SWENSE.dat
+第 4 步：waveFoam-HOS-Irregular 跑 CFD（bash ./Allrun）
+```
 
 ## 目录结构
 
@@ -23,13 +28,23 @@ HOS-NWT-Irregular/
 └── runHOS-NWT.sh        # 一键运行脚本
 ```
 
-## 运行步骤
+## 运行步骤（第 3 步：造波）
+
+前置：`buildHOS.sh` 已编译 HOS-NWT；环境已加载（见 tutorials/README.md）。
 
 ```bash
-bash runHOS-NWT.sh                          # 运行 HOS-NWT
+# 1. 造波（在 HOS-NWT-Irregular 目录内）
+bash runHOS-NWT.sh
+
+# 2. 把数据交给 CFD 算例
 cp Results/modes_HOS_SWENSE.dat ../waveFoam-HOS-Irregular/constant/
+
+# 3. 跑 CFD（第 4 步）
 cd ../waveFoam-HOS-Irregular && bash ./Allrun
 ```
+
+验证：`Results/modes_HOS_SWENSE.dat` 生成、无 NaN；CFD 的
+`log.setWaveField` 出现 `GRID2GRID Vol2Vol is initialized`。
 
 ## 波浪设置文件 `input_HOS-NWT.dat` 详解
 

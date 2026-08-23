@@ -142,6 +142,11 @@ Four ready-to-run tutorial cases are provided:
 
 > Each case directory contains its own `README.md` with the case purpose,
 > run steps and a line-by-line explanation of the wave-setting files.
+>
+> **Start here:** [tutorials/README.md](tutorials/README.md) is the master
+> run guide — it explains the "HOS first, OpenFOAM second" workflow, from
+> which step to start (fresh setup / pre-built data / changed wave
+> parameters), and the verification steps.
 
 ### `tutorials/HOS-NWT/` — HOS wave generation
 

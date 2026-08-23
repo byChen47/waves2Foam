@@ -7,18 +7,16 @@
 入口松弛区（x=0..5 m）把 HOS 波浪场注入 CFD，出口松弛区（x=13..18 m）
 吸收波浪防止反射。模拟 8 s，入口区出现振幅约 0.05 m、周期 2 s 的规则波。
 
-## 运行顺序（两步流程中的第 2 步）
+## 运行流程（从哪一步开始）
 
-完整流程是 **“先 HOS 造波，再 OpenFOAM 计算”**：
+本算例数据已内置（`constant/modes_HOS_SWENSE.dat`），**日常直接做下面的
+第 4 步 CFD 运行**；修改波浪参数时才需要先做第 3 步造波。首次使用的
+环境与编译步骤见 [tutorials/README.md](../README.md)。
 
 ```text
-第 1 步（可选）：运行 ../HOS-NWT 生成波浪数据
-                → cp Results/modes_HOS_SWENSE.dat constant/
-第 2 步（本算例）：bash ./Allrun（blockMesh → setWaveField → waveGaugesNProbes → waveFoam）
+第 3 步（仅改参数时）：../HOS-NWT 造波 → cp 新数据到 constant/
+第 4 步（日常入口，本算例）：bash ./Allrun
 ```
-
-本算例已内置 `constant/modes_HOS_SWENSE.dat`，**直接跑第 2 步即可**；
-只有修改波高/周期等参数时，才需要先重跑第 1 步并把新数据拷进来。
 
 ## 目录结构
 
@@ -36,21 +34,23 @@ waveFoam-HOS/
 └── Allrun                 # 一键运行脚本
 ```
 
-## 运行步骤
+## 运行步骤（第 4 步：CFD 运行）
 
 前置：`libGrid2Grid.so` 与 `libwaves2FoamGrid2Grid.so` 已编译安装
-（见 `HOSwaves2Foam/README.md`）；OpenFOAM + waves2Foam 环境已加载。
+（见 [tutorials/README.md](../README.md)）；环境已加载。
 
 ```bash
 cd HOSwaves2Foam/tutorials/waveFoam-HOS
-bash ./Allrun          # 依次执行 blockMesh → setWaveField → waveFoam
+bash ./Allrun
+# 内部顺序：restore0Dir → blockMesh → setWaveField → waveGaugesNProbes → waveFoam
 
 # 查看结果（时间目录 0..8）
 foamToVTK -time 8      # 用 ParaView 打开
 ```
 
-`setWaveField` 时日志里出现 `GRID2GRID Vol2Vol is initialized` 和
-`HOS Result File : constant/modes_HOS_SWENSE.dat` 说明耦合初始化成功。
+验证：`log.setWaveField` 出现 `GRID2GRID Vol2Vol is initialized` 和
+`HOS Result File : constant/modes_HOS_SWENSE.dat`；
+`postProcessing/surfaceElevationAnyName/0/surfaceElevation.dat` 有波高时序。
 
 ## 波浪配置文件详解
 

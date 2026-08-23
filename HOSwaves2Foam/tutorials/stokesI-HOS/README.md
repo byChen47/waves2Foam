@@ -10,14 +10,16 @@ T = 3 s）造波设置改造成 **HOS 造波**（HOS-NWT → Grid2Grid → waves
 入口松弛区在 x = -312..-282 m 注入 HOS 波浪，出口松弛区
 x = 282..312 m 消波，模拟 30 s。
 
-## 运行顺序（两步流程）
+## 运行流程（从哪一步开始）
+
+本算例数据已内置（`constant/modes_HOS_SWENSE.dat`，88 MB），**日常直接做
+下面的第 4 步 CFD 运行**；修改波浪参数时才需要先做第 3 步造波。首次使用
+的环境与编译步骤见 [tutorials/README.md](../README.md)。
 
 ```text
-第 1 步（可选）：HOS-NWT 造波（HOS-NWT/ 子算例，生成 modes_HOS_SWENSE.dat）
-第 2 步：bash ./Allrun（CFD 计算）
+第 3 步（仅改参数时）：HOS-NWT/ 子算例造波 → cp 新数据到 constant/
+第 4 步（日常入口，本算例）：bash ./Allrun
 ```
-
-`constant/modes_HOS_SWENSE.dat` 已内置（88 MB），直接跑第 2 步即可。
 
 ## 目录结构
 
@@ -41,20 +43,26 @@ stokesI-HOS/
 └── Allrun                   # 一键运行（加密/并行默认注释）
 ```
 
-## 运行步骤
+## 运行步骤（第 4 步：CFD 运行）
 
-前置：`libGrid2Grid.so`、`libwaves2FoamGrid2Grid.so` 已编译；环境已加载。
+前置：`libGrid2Grid.so`、`libwaves2FoamGrid2Grid.so` 已编译；环境已加载
+（见 [tutorials/README.md](../README.md)）。
 
 ```bash
 cd HOSwaves2Foam/tutorials/stokesI-HOS
-bash ./Allrun          # restore0Dir → blockMesh → setWaveField → waveFoam
+bash ./Allrun
+# restore0Dir → blockMesh → setWaveField → waveGaugesNProbes → waveFoam（30 s）
 ```
+
+验证：`log.setWaveField` 出现 `GRID2GRID Vol2Vol is initialized`；
+时间目录到 30；`postProcessing/surfaceElevationAnyName/0/surfaceElevation.dat`
+有波高时序。
 
 > 基础网格 156×1×33 的竖向单元约 6 m，**分辨率不足以解析 0.05 m 的波面**。
 > 生产计算请打开 `Allrun` 里被注释的 4 轮 `topoSet`/`refineMesh`（单元数约
 > ×256），再配合 `decomposePar` + `mpirun -np 8 waveFoam -parallel`。
 
-重新生成 HOS 波浪数据：
+重新生成 HOS 波浪数据（第 3 步，仅改参数时）：
 
 ```bash
 cd HOS-NWT

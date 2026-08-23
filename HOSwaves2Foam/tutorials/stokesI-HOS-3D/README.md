@@ -16,21 +16,21 @@
 > 与 2D 版相同的说明：基础网格竖向 6 m 单元**无法分辨 0.05 m 的波面**，
 > 生产计算请打开 `Allrun` 里的 `topoSet`/`refineMesh` 加密，并配合并行。
 
-## 运行顺序（两步，先 HOS 后 OpenFOAM）
+## 运行流程（从哪一步开始）
+
+本算例数据已内置（`constant/modes_HOS_SWENSE.dat`，89 MB），**日常直接做
+下面的第 4 步 CFD 运行**；修改波浪参数时才需要先做第 3 步造波。首次使用
+的环境与编译步骤见 [tutorials/README.md](../README.md)（三维多一步
+`buildHOS3D.sh`）。
 
 ```text
-第 1 步：HOS-NWT 生成波浪数据（只有改波浪参数时才需要重跑）
-          → Results/modes_HOS_SWENSE.dat → 拷到 constant/
-第 2 步：运行 OpenFOAM 算例（Allrun）
-          → blockMesh → setWaveField → waveGaugesNProbes → waveFoam
+第 3 步（仅改参数时）：HOS-NWT/ 子算例造波（build3D）→ cp 新数据到 constant/
+第 4 步（日常入口，本算例）：bash ./Allrun
 ```
-
-**算例里已经内置了三维 SWENSE 数据**（`constant/modes_HOS_SWENSE.dat`，
-89 MB），所以直接跑第 2 步即可；第 1 步用于自己换波参数。
 
 ## 运行步骤
 
-### 前置（只需一次）
+### 前置（一次性）
 
 ```bash
 # 三维 HOS-NWT 需要 n2 > 1（y 向模态），用专用脚本编译（默认 n1=128, n2=8）
@@ -38,9 +38,10 @@ bash HOSwaves2Foam/scripts/buildHOS3D.sh
 # 产物：HOSwaves2Foam/src/HOS-NWT/build3D/HOS_NWT（2D 版 build/ 不受影响）
 ```
 
-以及已编译的 `libGrid2Grid.so`、`libwaves2FoamGrid2Grid.so`。
+以及已编译的 `libGrid2Grid.so`、`libwaves2FoamGrid2Grid.so`（见
+tutorials/README.md）。
 
-### 第 1 步：重新生成三维波浪数据（可选）
+### 第 3 步：重新生成三维波浪数据（可选）
 
 ```bash
 cd HOSwaves2Foam/tutorials/stokesI-HOS-3D/HOS-NWT
@@ -48,7 +49,7 @@ bash runHOS-NWT.sh                     # 自动找 build3D 的可执行文件
 cp Results/modes_HOS_SWENSE.dat ../constant/
 ```
 
-### 第 2 步：运行 CFD 算例
+### 第 4 步：运行 CFD 算例（日常入口）
 
 ```bash
 cd HOSwaves2Foam/tutorials/stokesI-HOS-3D

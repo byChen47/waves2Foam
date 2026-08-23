@@ -8,12 +8,34 @@
 HOS 水池：200 m（长）× 1 m（宽）× 100 m（水深），规则波振幅 0.025 m、
 周期 3 s（与原来 StokesI 的 H=0.05 m、T=3 s 等价），造波 60 s。
 
-## 运行步骤
+## 运行流程（从哪一步开始）
+
+本算例是两步流程中的**第 3 步：HOS 造波**——只有修改波浪参数时才需要
+运行；日常跑 CFD 直接去 `../`（stokesI-HOS）执行第 4 步。首次使用的
+环境与编译步骤见 [tutorials/README.md](../../README.md)。
+
+```text
+第 3 步（本算例）：造波 → Results/modes_HOS_SWENSE.dat → cp 到 ../constant/
+第 4 步：stokesI-HOS 跑 CFD（bash ./Allrun）
+```
+
+## 运行步骤（第 3 步：造波）
+
+前置：`buildHOS.sh` 已编译 HOS-NWT；环境已加载。
 
 ```bash
-bash runHOS-NWT.sh                          # 生成 Results/modes_HOS_SWENSE.dat
-cp Results/modes_HOS_SWENSE.dat ../constant/  # 交给 CFD 算例
+# 1. 造波（在本目录内；自动找 src/HOS-NWT/build/HOS_NWT）
+bash runHOS-NWT.sh
+
+# 2. 交给 CFD 算例
+cp Results/modes_HOS_SWENSE.dat ../constant/
+
+# 3. 跑 CFD（第 4 步）
+cd .. && bash ./Allrun
 ```
+
+验证：`Results/modes_HOS_SWENSE.dat` 生成、无 NaN；CFD 的
+`log.setWaveField` 出现 `GRID2GRID Vol2Vol is initialized`。
 
 ## 波浪设置文件 `input_HOS-NWT.dat` 要点
 

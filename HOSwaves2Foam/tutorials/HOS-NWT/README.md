@@ -9,17 +9,18 @@
 水池参数：20 m（长）× 1 m（宽）× 0.4 m（水深），规则波振幅 0.05 m、
 周期 2 s（波高 0.1 m）。
 
-## 运行顺序（两步流程中的第 1 步）
+## 运行流程（从哪一步开始）
 
-本套教程的完整流程是 **“先 HOS 造波，再 OpenFOAM 计算”**：
+本算例是两步流程中的**第 3 步：HOS 造波**——只有修改波浪参数时才需要
+运行；日常跑 CFD 直接去 `waveFoam-HOS` 执行第 4 步。完整流程和首次
+使用的编译步骤见 [tutorials/README.md](../README.md)。
 
 ```text
-第 1 步（本算例）：HOS-NWT 生成波浪数据 → Results/modes_HOS_SWENSE.dat
-第 2 步：waveFoam-HOS 用这份数据跑 CFD（Allrun）
+第 3 步（本算例）：HOS-NWT 造波 → Results/modes_HOS_SWENSE.dat
+第 4 步：waveFoam-HOS 跑 CFD（bash ./Allrun）
 ```
 
-`waveFoam-HOS/constant/` 里已内置同一份数据，**不换波浪参数时可以跳过
-本步**，直接运行第 2 步。
+`waveFoam-HOS/constant/` 已内置同一份数据，日常直接做第 4 步即可。
 
 ## 目录结构
 
@@ -30,21 +31,24 @@ HOS-NWT/
 └── runHOS-NWT.sh        # 一键运行脚本
 ```
 
-## 运行步骤
+## 运行步骤（第 3 步：造波）
 
 前置：HOS-NWT 已编译（`HOSwaves2Foam/scripts/buildHOS.sh`，产物
-`src/HOS-NWT/build/HOS_NWT`）。
+`src/HOS-NWT/build/HOS_NWT`）；环境已加载（见 tutorials/README.md）。
 
 ```bash
-# 1. 运行（会自动找到 src/HOS-NWT/build/HOS_NWT；也可显式传路径）
+# 1. 造波（在 HOS-NWT 目录内；自动找 build/HOS_NWT，也可显式传路径）
 bash runHOS-NWT.sh
 
 # 2. 把数据交给 CFD 算例
 cp Results/modes_HOS_SWENSE.dat ../waveFoam-HOS/constant/
 
-# 3. 去跑 waveFoam-HOS
+# 3. 跑 CFD（第 4 步）
 cd ../waveFoam-HOS && bash ./Allrun
 ```
+
+验证：`Results/modes_HOS_SWENSE.dat` 生成、日志无 NaN；CFD 的
+`log.setWaveField` 出现 `GRID2GRID Vol2Vol is initialized`。
 
 ## 波浪设置文件 `input_HOS-NWT.dat` 详解
 

@@ -9,16 +9,37 @@ HOS 水池：200 m（长）× 20 m（宽）× 100 m（水深），振幅 0.025 m
 周期 3 s、波向与 x 轴成 15°（斜波 → 三维），造波 30 s。
 **需要 n2=8（y 向模态）的 3D 版 HOS-NWT**（见下）。
 
-## 运行步骤
+## 运行流程（从哪一步开始）
+
+本算例是两步流程中的**第 3 步：HOS 造波**（三维）——只有修改波浪参数时
+才需要运行；日常跑 CFD 直接去 `../`（stokesI-HOS-3D）执行第 4 步。
+首次使用的环境与编译步骤见 [tutorials/README.md](../../README.md)。
+
+```text
+第 3 步（本算例）：造波 → Results/modes_HOS_SWENSE.dat → cp 到 ../constant/
+第 4 步：stokesI-HOS-3D 跑 CFD（bash ./Allrun）
+```
+
+## 运行步骤（第 3 步：造波）
+
+前置：`buildHOS3D.sh` 已编译 3D 版 HOS-NWT；环境已加载。
 
 ```bash
-# 先编译 3D 版 HOS-NWT（n1=128, n2=8）
+# 1. 编译 3D 版 HOS-NWT（n1=128, n2=8；一次性）
 bash HOSwaves2Foam/scripts/buildHOS3D.sh
 
-# 再运行造波（自动找 src/HOS-NWT/build3D/HOS_NWT）
+# 2. 造波（自动找 src/HOS-NWT/build3D/HOS_NWT）
 bash runHOS-NWT.sh
+
+# 3. 交给 CFD 算例
 cp Results/modes_HOS_SWENSE.dat ../constant/
+
+# 4. 跑 CFD（第 4 步）
+cd .. && bash ./Allrun
 ```
+
+验证：`Results/modes_HOS_SWENSE.dat` 生成、无 NaN；CFD 的
+`log.setWaveField` 出现 `GRID2GRID Vol2Vol is initialized`。
 
 ## 波浪设置文件 `input_HOS-NWT.dat` 要点
 
