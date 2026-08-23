@@ -17,6 +17,7 @@ This repository is a **fork of [ogoe/waves2Foam](https://github.com/ogoe/waves2F
 | `applications/utilities/preProcessing` | Pre-processing tools: `setWaveField`, `setWaveParameters`, `waveGaugesNProbes`, `faceSetToSTL`, `relaxationZoneLayout`, `sampleIncidentWaveField` |
 | `tutorials/` | Example cases for the solvers and relaxation-zone layout |
 | `ThirdParty/` | Bundled dependencies: LAPACK 3.3.1, SPARSKIT2, OceanWave3D, fenton4Foam |
+| `doc/` | waves2Foam manual (`manualWaves2Foam_v090.pdf`), OceanWave3D coupling memo, source-code structure |
 
 ## Getting started
 
