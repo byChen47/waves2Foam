@@ -141,6 +141,10 @@ It should show `-rwxr-xr-x`. The same command also works for filesystems that do
 * **OceanWave3D is bundled** in `ThirdParty/OceanWave3D-Fortran90` (source, license and README included), so a fresh clone builds everything without downloading extra sources. If you prefer a different version, replace that directory or set `OCEANWAVE3D_DIR` to the path of your own copy before running `./Allwmake`.
 * If the build is interrupted, `./Allwmake` will pick up where it left off: already-compiled ThirdParty libraries and binaries are detected and skipped.
 
+## IDE setup (VS Code)
+
+VS Code does not recognise OpenFOAM's uppercase `.C`/`.H` files or its `lnInclude` header layout out of the box, so IntelliSense reports `#include errors detected` and code you wrote earlier is not auto-completed. The complete, step-by-step fix (global user settings, `c_cpp_properties.json`, full `lnInclude` path list, preprocessor defines and `wmake` build tasks) is documented in [OpenFOAMPathSettingReadme.md](OpenFOAMPathSettingReadme.md).
+
 ## Solvers
 
 Four solvers are provided, each under `applications/solvers/solvers2206_PLUS/` and `applications/solvers/solvers2406_PLUS/`:
