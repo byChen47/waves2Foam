@@ -1,0 +1,32 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Copy this block into system/controlDict (inside the existing `functions {}`
+  block if you already have one), adjust the locations, and run your solver.
+\*---------------------------------------------------------------------------*/
+
+    waveElevation1
+    {
+        type            waveElevation;
+        libs            ("libwaveMonitoring.so");
+
+        // Gauge locations: (x y z)
+        locations
+        (
+            (0.10 0.05 0.005)
+            (0.25 0.05 0.005)
+            (0.40 0.05 0.005)
+        );
+
+        // Optional (defaults shown)
+        alpha               alpha.water;
+        liquid              true;
+        direction           (0 0 0);
+        interpolationScheme cellPoint;
+        subtractReference   false;
+        log                 true;
+
+        // Sampling frequency
+        writeControl    timeStep;
+        writeInterval   1;
+    }
+
+// ************************************************************************* //
