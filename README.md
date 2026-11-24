@@ -6,7 +6,7 @@ This repository is a **fork of [ogoe/waves2Foam](https://github.com/ogoe/waves2F
 
 * **HOS (Higher-Order Spectral) wave generation** — HOS-NWT / HOS-ocean + Grid2Grid bridged into the waves2Foam relaxation zones (`HOSwaves2Foam/`), with regular- and irregular-wave tutorial cases;
 * **`overWaveDyMFoam`** — an overset + dynamic-mesh wave solver;
-* support for **OpenFOAM v2206 and v2406** (OpenFOAM+ branch), with all ThirdParty dependencies bundled so a fresh clone compiles out of the box.
+* support for **OpenFOAM v2206, v2406 and v2606** (OpenFOAM+ branch), with all ThirdParty dependencies bundled so a fresh clone compiles out of the box. Shared sources are version-conditional, so one tree still builds on the older branches — see [Supported OpenFOAM versions](#supported-openfoam-versions).
 
 ## Repository structure
 
@@ -20,10 +20,12 @@ waves2Foam/
 │   ├── waves2FoamProcessing/   # run-time post-processing: gauges, probes, spectral analysis
 │   ├── waves2FoamSampling2206/ # surface-elevation sampling (OpenFOAM v2206)
 │   ├── waves2FoamSampling2406/ # surface-elevation sampling (OpenFOAM v2406)
+│   ├── waves2FoamSampling2606/ # surface-elevation sampling (OpenFOAM v2606)
 │   └── waves2FoamPorosity/     # porous-media model
 ├── applications/
 │   ├── solvers/solvers2206_PLUS/  # waveFoam, waveIsoFoam, porousWaveFoam, overWaveDyMFoam
 │   ├── solvers/solvers2406_PLUS/  # same solvers for OpenFOAM v2406
+│   ├── solvers/solvers2606_PLUS/  # same solvers for OpenFOAM v2606
 │   └── utilities/                 # setWaveField, setWaveParameters, waveGaugesNProbes, ...
 ├── tutorials/                  # standard waves2Foam tutorial cases
 ├── ThirdParty/                 # LAPACK 3.3.1, SPARSKIT2, OceanWave3D, fenton4Foam
@@ -53,12 +55,15 @@ You can actually clone it anywhere — `bin/bashrc` detects the repository root 
 
 ## Requirements
 
-* **OpenFOAM v2206 or v2406** (OpenFOAM.org), built and sourced:
+* **OpenFOAM v2206, v2406 or v2606** (OpenCFD/ESI releases), built and sourced:
   ```bash
-  source $HOME/OpenFOAM/<username>-v<version>/etc/bashrc
+  source $HOME/OpenFOAM/OpenFOAM-v<version>/etc/bashrc
   ```
-  (`$WM_PROJECT_USER_DIR` must point to your OpenFOAM user directory, e.g. `chen-v2206`.)
-* A C++ compiler (`gcc`/`g++`) and GNU `make`
+  `$WM_PROJECT_USER_DIR` then points to your OpenFOAM user directory
+  (e.g. `$HOME/OpenFOAM/<username>-v2606`), which is where waves2Foam is expected to live.
+* A C++ compiler (`gcc`/`g++`) and GNU `make`; for **v2606** it must support
+  C++17 (OpenFOAM's wmake rules add `-std=c++17` automatically — this fork is
+  built and tested with GCC 9.5)
 * `gfortran` (Fortran compiler, required by the ThirdParty libraries and the HOS models)
 * `cmake` (required by the HOS models; the vendored FFTW3/LAPACK need no system install)
 * The GNU Scientific Library (GSL)
@@ -105,9 +110,21 @@ cd $WM_PROJECT_USER_DIR/applications/utilities/waves2Foam
 ./Allwmake
 ```
 
+No OpenFOAM environment needs to be loaded first: if none is detected,
+`./Allwmake` sources `~/OpenFOAM/OpenFOAM-*/etc/bashrc` itself. When several
+OpenFOAM versions are installed side by side, pin the one you want to build
+against:
+
+```bash
+OF_BASHRC=$HOME/OpenFOAM/OpenFOAM-v2406/etc/bashrc ./Allwmake
+```
+
 ### What `./Allwmake` does
 
-1. **Sets up the environment** by sourcing `bin/bashrc` — defines the `WAVES_*` variables, detects the installed OpenFOAM version and the OpenFOAM+ branch, and selects the matching `solvers<version>_PLUS` / `waves2FoamSampling<version>` sources.
+1. **Sets up the environment** — sources an OpenFOAM installation if none is loaded
+   (honouring `$OF_BASHRC`), then `bin/bashrc`, which defines the `WAVES_*`
+   variables, detects the installed OpenFOAM version and branch, and selects the
+   matching `solvers<version>_PLUS` and `waves2FoamSampling<version>` sources.
 2. **Builds the ThirdParty dependencies** (`ThirdParty/Allwmake`):
    - LAPACK 3.3.1 and SPARSKIT2 (static libraries, built from the bundled tarballs)
    - OceanWave3D (executable + `libOceanWave3D.so`), used for external wave forcing
@@ -117,7 +134,18 @@ cd $WM_PROJECT_USER_DIR/applications/utilities/waves2Foam
 5. **Builds the pre-processing utilities**: `setWaveField`, `setWaveParameters`, `waveGaugesNProbes`, `faceSetToSTL`, `relaxationZoneLayout`, `sampleIncidentWaveField`.
 6. **Builds the HOSwaves2Foam coupling**: HOS-NWT + HOS-ocean (`HOSwaves2Foam/scripts/buildHOS.sh`), Grid2Grid (`scripts/buildGrid2Grid.sh`) and `libwaves2FoamGrid2Grid.so` (`wmake`). Already-built HOS binaries / installed libraries are detected and skipped.
 
-Built libraries and executables are installed into `$FOAM_USER_LIBBIN` / `$FOAM_USER_APPBIN` (by default `$HOME/OpenFOAM/<username>-v<version>/platforms/linux64GccDPInt32Opt/lib` and `.../bin`). `./Allwclean` cleans everything, including the HOS build artifacts and coupling libraries.
+Libraries, the pre-processing utilities and `porousWaveFoam` / `waveIsoFoam` are installed into
+`$FOAM_USER_LIBBIN` / `$FOAM_USER_APPBIN` (by default
+`$HOME/OpenFOAM/<username>-v<version>/platforms/linux64GccDPInt32Opt/lib` and `.../bin`).
+`waveFoam` and `overWaveDyMFoam` are installed into `$FOAM_APPBIN`, i.e. inside the
+OpenFOAM installation itself; if OpenFOAM was installed system-wide and that
+directory is not writable, change `EXE` in their `Make/files` to
+`$(WAVES_APPBIN)` instead. `./Allwclean` cleans everything, including the HOS
+build artifacts and coupling libraries.
+
+`./Allwmake` reports failures: every library, solver and utility is checked, a
+failing step prints `*** ... FAILED`, and the script exits non-zero instead of
+printing `COMPILATION DONE`.
 
 ### File permissions (Ubuntu)
 
@@ -141,13 +169,47 @@ It should show `-rwxr-xr-x`. The same command also works for filesystems that do
 * **OceanWave3D is bundled** in `ThirdParty/OceanWave3D-Fortran90` (source, license and README included), so a fresh clone builds everything without downloading extra sources. If you prefer a different version, replace that directory or set `OCEANWAVE3D_DIR` to the path of your own copy before running `./Allwmake`.
 * If the build is interrupted, `./Allwmake` will pick up where it left off: already-compiled ThirdParty libraries and binaries are detected and skipped.
 
+## Supported OpenFOAM versions
+
+`bin/bashrc` and `src/Allwmake` select the sources from the OpenFOAM version
+number, so the same tree serves all supported branches:
+
+| OpenFOAM | Solver sources | Sampling sources |
+|---|---|---|
+| **v2606** | `applications/solvers/solvers2606_PLUS/` | `src/waves2FoamSampling2606/` |
+| **v2406** | `applications/solvers/solvers2406_PLUS/` | `src/waves2FoamSampling2406/` |
+| **v2206** | `applications/solvers/solvers2206_PLUS/` | `src/waves2FoamSampling2206/` |
+| v1712 – v2012 | `solvers1712_PLUS/` … `solvers2012_PLUS/` | `src/waves2FoamSampling1712/` |
+| < v1706 | `solvers<version>_PLUS/` | `src/waves2FoamSampling/` |
+
+`src/Allwmake` maps the version number to the sampling directory as
+`<1706 → waves2FoamSampling`, `<2206 → …1712`, `<2406 → …2206`,
+`<2606 → …2406`, otherwise `…2606`.
+
+Code shared by all versions uses compile-time switches where the OpenFOAM API
+changed, so upgrading OpenFOAM does not require editing the sources:
+
+| API | Handling |
+|---|---|
+| `directionMixedFvPatchField` copy constructor | deleted from **v2506**; `gabcVelocity` uses `directionMixedFvPatchVectorField(pfld, pfld.internalField())` under `#if OFPLUSBRANCH == 1 && 2506 <= OFVERSION` and the previous form otherwise |
+| `globalIndex::reset()` | tag-first argument order from **v2506**; only `waves2FoamSampling2606/` uses the new form |
+| `interpolatedFaces.H` | removed in **v2506**; `overWaveDyMFoam` includes it only on older versions and raises a fatal error if `massFluxInterpolation` is enabled on newer ones |
+
+To add support for a future release (e.g. v2612), copy
+`applications/solvers/solvers2606_PLUS/` and `src/waves2FoamSampling2606/` to the
+new version number; extend the version `if` chains in `bin/bashrc` and
+`src/Allwmake` only if the mapping changes. This fork is currently built and
+tested with **v2606**; the v2206/v2406 trees are kept unchanged.
+
 ## IDE setup (VS Code)
 
 VS Code does not recognise OpenFOAM's uppercase `.C`/`.H` files or its `lnInclude` header layout out of the box, so IntelliSense reports `#include errors detected` and code you wrote earlier is not auto-completed. The complete, step-by-step fix (global user settings, `c_cpp_properties.json`, full `lnInclude` path list, preprocessor defines and `wmake` build tasks) is documented in [OpenFOAMPathSettingReadme.md](OpenFOAMPathSettingReadme.md).
 
 ## Solvers
 
-Four solvers are provided, each under `applications/solvers/solvers2206_PLUS/` and `applications/solvers/solvers2406_PLUS/`:
+Four solvers are provided, per OpenFOAM version under
+`applications/solvers/solvers<version>_PLUS/` (`solvers2206_PLUS/`,
+`solvers2406_PLUS/`, `solvers2606_PLUS/`):
 
 | Solver | Description |
 |---|---|
@@ -160,8 +222,11 @@ Four solvers are provided, each under `applications/solvers/solvers2206_PLUS/` a
 
 `overWaveDyMFoam` combines the **overset-mesh** and **dynamic-mesh** capabilities of OpenFOAM's `overInterDyMFoam` with the waves2Foam relaxation-zone wave generation and absorption framework. It is aimed at two-phase free-surface simulations on overlapping meshes, and supports VOF interface capturing, dynamic mesh motion, and external wave forcing.
 
-* Source: `applications/solvers/solvers2206_PLUS/overWaveDyMFoam` and `applications/solvers/solvers2406_PLUS/overWaveDyMFoam`
+* Source: `overWaveDyMFoam/` in `applications/solvers/solvers2206_PLUS/`, `solvers2406_PLUS/` and `solvers2606_PLUS/`
 * Detailed description: `applications/solvers/solvers2206_PLUS/overWaveDyMFoam/README.md`
+* On OpenFOAM **v2506 and newer** the `massFluxInterpolation` switch in `fvSolution`
+  is no longer available (upstream removed `interpolatedFaces.H`). It defaults to
+  `false`; enabling it makes the solver stop with an explicit fatal error.
 
 `./Allwmake` discovers and builds it automatically alongside the other solvers — no extra steps are needed.
 
@@ -215,6 +280,24 @@ Documentation (Chinese):
    waveFoam
    ```
 2. See the individual `tutorials/*/Allrun` scripts for full automated setups.
+
+## Troubleshooting
+
+`./Allwmake` stops at the first failing component and names it, for example:
+
+```text
+*** FAILED: library waves2FoamGABC
+*** LIBRARY BUILD FAILED (exit 1) - see the log above ***
+```
+
+| Symptom | Cause / fix |
+|---|---|
+| `use of deleted function ...directionMixedFvPatchField(const this_bctype&)` | Building v2506+ with a source tree that lacks the guarded copy constructor (see [Supported OpenFOAM versions](#supported-openfoam-versions)). |
+| `no matching function for call to 'Foam::globalIndex::reset(Foam::label, ...)'` | v2506+ made the dispatch tag the first argument; use `waves2FoamSampling2606/` (or newer) rather than an older sampling directory. |
+| `fatal error: interpolatedFaces.H: No such file or directory` | That header was removed in v2506; see the `overWaveDyMFoam` note above. |
+| `cannot find -lwaves2Foam...` | The library did not build; run `wmake libso` in its `src/...` directory and read the first `error:`. |
+| `wmkdepend: could not open 'foamTime.H'` | Harmless dependency-scan message on newer OpenFOAM. |
+| `WM_PROJECT_DIR: unbound variable` while sourcing | The shell runs with `set -u`; source the OpenFOAM `etc/bashrc` without it. |
 
 ## References
 
