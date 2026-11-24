@@ -13,6 +13,31 @@ then
     chmod a+x ./bin/bashrc
 fi
 
+## Make sure an OpenFOAM environment is available.  This script is often run
+## from a plain shell, while the OpenFOAM environment is normally set up in
+## ~/.bashrc only for login shells.
+## Set OF_BASHRC=/path/to/OpenFOAM-vXXXX/etc/bashrc to force a specific one.
+if [ -z "${WM_PROJECT_DIR:-}" ]
+then
+    for ofrc in "${OF_BASHRC:-}" "$HOME"/OpenFOAM/OpenFOAM-*/etc/bashrc
+    do
+        [ -f "$ofrc" ] || continue
+        echo "Sourcing OpenFOAM environment: $ofrc"
+        . "$ofrc"
+        break
+    done
+fi
+
+if [ -z "${WM_PROJECT_DIR:-}" ]
+then
+    echo ""
+    echo "ERROR: no OpenFOAM environment found."
+    echo "       Source <OpenFOAM>/etc/bashrc first, or run:"
+    echo "           OF_BASHRC=/path/to/OpenFOAM-vXXXX/etc/bashrc ./Allwmake"
+    echo ""
+    exit 1
+fi
+
 ## Set environmental variables
 . ./bin/bashrc
 
@@ -69,7 +94,15 @@ fi
 echo "====================================="
 echo "    COMPILE LIBRARY"
 echo "====================================="
-( cd src; ./Allwmake )
+LIB_RC=0
+( cd src; ./Allwmake ) || LIB_RC=$?
+if [ "$LIB_RC" -ne 0 ]
+then
+    echo ""
+    echo "*** LIBRARY BUILD FAILED (exit $LIB_RC) - see the log above ***"
+    echo ""
+    exit 1
+fi
 
 ## SOLVERS
 # Find all solver names in $WAVES_SOL
@@ -78,6 +111,8 @@ echo "====================================="
 echo "    COMPILE SOLVERS"
 echo "====================================="
 solvers=`ls -d $WAVES_SOL/*`
+
+FAILED=""
 
 # Loop over the solver names
 for s in $solvers
@@ -101,7 +136,11 @@ do
     fi
 
     # Compile the solver
-    ( cd $WAVES_SOL/$solverName; wmake )
+    if ! ( cd $WAVES_SOL/$solverName; wmake )
+    then
+        echo "*** SOLVER FAILED: $solverName"
+        FAILED="$FAILED solver:$solverName"
+    fi
 done
 
 ## UTILITIES
@@ -155,7 +194,11 @@ else
     ln -s -f $WAVES_PRE/setWaveField/Make/optionsNonGABC $WAVES_PRE/setWaveField/Make/options
 fi
 
-( cd $WAVES_PRE && wmake all )
+if ! ( cd $WAVES_PRE && wmake all )
+then
+    echo "*** PRE-PROCESSING UTILITIES FAILED"
+    FAILED="$FAILED utilities:preProcessing"
+fi
 
 # Post-processing utilities - Post processing removed from compilation Jan. 2021
 # echo ""
@@ -250,6 +293,17 @@ fi
 
 echo ""
 echo "====================================="
+if [ -n "$FAILED" ]
+then
+    echo "    COMPILATION FINISHED WITH FAILURES:"
+    for f in $FAILED
+    do
+        echo "      - $f"
+    done
+    echo "====================================="
+    echo ""
+    exit 1
+fi
 echo "    COMPILATION DONE"
 echo "====================================="
 echo ""

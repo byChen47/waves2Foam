@@ -102,7 +102,14 @@ gabcVelocityFvPatchVectorField
     const gabcVelocityFvPatchVectorField& pivpvf
 )
 :
+#if OFPLUSBRANCH == 1 && 2506 <= OFVERSION
+    // OpenFOAM-v2506+ deletes the "copy without an internal field"
+    // constructor of directionMixedFvPatchField, so delegate to the
+    // copy-with-internal-field variant (same field, same reference).
+    directionMixedFvPatchVectorField(pivpvf, pivpvf.internalField()),
+#else
     directionMixedFvPatchVectorField(pivpvf),
+#endif
     phiName_(pivpvf.phiName_),
     isZeroVorticity_(pivpvf.isZeroVorticity_),
     phip_(pivpvf.phip_),

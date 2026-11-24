@@ -1,5 +1,13 @@
 #!/bin/bash
 
+rc=0
+
+# Build one library and remember whether anything failed
+build_lib ()
+{
+    ( cd "$1" && wmake libso ) || { echo "*** FAILED: library $1"; rc=1; }
+}
+
 if [ ! -f "./../bin/bashrc" ]
 then
     cp ../bin/bashrc.org ../bin/bashrc
@@ -40,47 +48,55 @@ else
 fi
 
 # Compile the library
-(cd waves2Foam          ; wmake libso)
+build_lib waves2Foam
 
 if [ $OFPLUSBRANCH -eq "1" ]
 then
     if [ "$WM_PROJECT_VERSION_NUMBER" -gt "1806" ]
     then
-        (cd waves2FoamGABC; wmake libso)
+        build_lib waves2FoamGABC
     fi
 fi
 
-(cd waves2FoamProcessing; wmake libso)
+build_lib waves2FoamProcessing
 
 # Currently, only compile waves2FoamSampling for all Openfoam versions except
 # for OpenFOAM-4.0
 if [ $FOAMEXTENDPROJECT -eq "1" ]
 then
-    (cd waves2FoamSampling  ; wmake libso)
+    build_lib waves2FoamSampling
 elif [ $OFPLUSBRANCH -eq "1" ]
 then
     if [ "$WM_PROJECT_VERSION_NUMBER" -lt "1706" ]
     then
-        (cd waves2FoamSampling  ; wmake libso)
+        build_lib waves2FoamSampling
     elif [ "$WM_PROJECT_VERSION_NUMBER" -lt "2206" ]
     then
-        (cd waves2FoamSampling1712  ; wmake libso)
+        build_lib waves2FoamSampling1712
     elif [ "$WM_PROJECT_VERSION_NUMBER" -lt "2406" ]
+
     then
-        (cd waves2FoamSampling2206  ; wmake libso)
+        build_lib waves2FoamSampling2206
+    elif [ "$WM_PROJECT_VERSION_NUMBER" -lt "2606" ]
+
+    then
+        build_lib waves2FoamSampling2406
     else
-        (cd waves2FoamSampling2406  ; wmake libso)
+        build_lib waves2FoamSampling2606
     fi
-else
+
+    else
     if [ "$WM_PROJECT_VERSION_NUMBER" -lt "400" ]
     then
-        (cd waves2FoamSampling  ; wmake libso)
+        build_lib waves2FoamSampling
     fi
 fi
 
-(cd waves2FoamPorosity  ; wmake libso)
+build_lib waves2FoamPorosity
 
 if [ "$WM_PROJECT_VERSION_NUMBER" -eq "1606" ]
 then
-    (cd waves2FoamMooring   ; wmake libso)
+    build_lib waves2FoamMooring
 fi
+
+exit $rc
