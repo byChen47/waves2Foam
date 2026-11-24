@@ -5,7 +5,6 @@
 
 ```
 libwaveMonitoring.so  ──▶  waveElevation   自由面高程时程（function object）
-GaugesNProbes         ──▶  probeDefinitions 批量生成测点 → functions 片段
 waveSpectra           ──▶  谱分析 / 统计量（独立后处理程序）
 ```
 
@@ -156,122 +155,7 @@ eta = ∫ alpha dl
 
 ---
 
-## 5. 用 `probeDefinitions` 批量生成波高仪（`GaugesNProbes`）
-
-手写 `locations` 适合少量测点；测点一多（晃荡、多孔挡板那种几十个测点），用
-`GaugesNProbes` 从 `constant/probeDefinitions` 批量生成。它是 waves2Foam 的
-`waveGaugesNProbes` 的独立替代，**只依赖 OpenFOAM**。
-
-```bash
-cd <case>
-GaugesNProbes -case .          # 读 constant/probeDefinitions
-# → system/gaugesNProbes.functions  +  gaugesNProbes/<name>.vtk
-```
-
-然后在 `system/controlDict` 的 `functions {}` 里加一行：
-
-```cpp
-functions
-{
-    #include "gaugesNProbes.functions"
-}
-```
-
-### `probeDefinitions` 关键字（沿用 waves2Foam，现有文件可直接用）
-
-| 关键字 | 含义 |
-|---|---|
-| `type` | `waveGauge` → 生成 `waveElevation`；`probeGauge` → 生成 OF `probes` |
-| `pointDistribution` | 测点分布类型（见下） |
-| `N` | 该分布的测点数 |
-| `linestart` / `lineend` / `stretch` | `lineDistribution`：直线布点（`stretch` 可选） |
-| `centre` / `radius` / `axis` | `circularDistribution`：圆周布点 |
-| `linestart0` / `lineend0` / `lineend1` / `N0` / `N1` / `stretch0` / `stretch1` | `quadrilateralDistribution`：四边形面布点 |
-| `xValues` / `yValues` / `zValues` | `userDefinedDistribution`：直接给坐标，Field 语法如 `nonuniform 3(0.1 0.2 0.3)` |
-| 子字典 | `concatenatedDistribution`：把多个分布拼起来 |
-| `add` | 每个波高仪竖直线的起点→终点偏移（用于 VTK 显示） |
-| `writeControl` / `writeInterval` | 写进生成的对象（可选，默认 `timeStep` / `1`） |
-| `alpha` | `waveGauge` 用的 VOF 场名（可选，默认 `alpha.water`） |
-| `fields` | `probeGauge` 采样的场列表（可选，默认 `alpha.water`） |
-
-示例（`examples/probeDefinitions` 可直接拷去改）：
-
-```cpp
-gaugeRow
-{
-    type                waveGauge;
-    pointDistribution   lineDistribution;
-    N                   3;
-    linestart           (0.10 0.05 0.0025);
-    lineend             (0.50 0.05 0.0025);
-    add                 (0 0.30 0);
-    axis                y;
-    writeControl        timeStep;
-    writeInterval       1;
-}
-
-pointProbes
-{
-    type                probeGauge;
-    pointDistribution   userDefinedDistribution;
-    N                   2;
-    xValues             nonuniform 2(0.2 0.3);
-    yValues             nonuniform 2(0.1 0.1);
-    zValues             nonuniform 2(0.0025 0.0025);
-    fields              (alpha.water U);
-}
-```
-
-生成的 `system/gaugesNProbes.functions`（可直接改）：
-
-```cpp
-    gaugeRow
-    {
-        type            waveElevation;
-        libs            ("libwaveMonitoring.so");
-        locations
-        (
-            (0.1 0.05 0.0025)
-            (0.3 0.05 0.0025)
-            (0.5 0.05 0.0025)
-        );
-        alpha           alpha.water;
-        writeControl    timeStep;
-        writeInterval   1;
-        log             false;
-    }
-
-    pointProbes
-    {
-        type            probes;
-        libs            (sampling);
-        probeLocations
-        (
-            (0.2 0.1 0.0025)
-            (0.3 0.1 0.0025)
-        );
-        fields          (alpha.water U);
-        writeControl    timeStep;
-        writeInterval   1;
-    }
-```
-
-### 命令行选项
-
-| 选项 | 默认 | 说明 |
-|---|---|---|
-| `-case <dir>` | `.` | 算例目录 |
-| `-dict <file>` | `constant/probeDefinitions` | 布局文件 |
-| `-out <file>` | `system/gaugesNProbes.functions` | 生成的 functions 片段 |
-| `-functionObject <type>` | `waveElevation` | `waveGauge` 用的对象类型 |
-| `-libs <lib>` | `libwaveMonitoring.so` | 该对象所在的库 |
-| `-noVTK` | 关 | 不写 `gaugesNProbes/<name>.vtk` |
-
-> 生成文件里每个分组名 = function object 名，所以 `probeDefinitions` 里的名字要唯一。
-> 跑完求解器：波高仪数据在 `postProcessing/waveElevation/<name>/elevation.dat`，
-> 点探针数据在 `postProcessing/<name>/<time>/<field>`（OF `probes` 的格式）。
-
-## 6. 后处理：谱分析与统计量
+## 5. 后处理：谱分析与统计量
 
 ```bash
 waveSpectra [-file <elevation.dat>] [-out <dir>]
@@ -319,7 +203,7 @@ waveSpectra/
 
 ---
 
-## 7. 在任何求解器上使用
+## 6. 在任何求解器上使用
 
 只要有 `alpha` 场就能用，与求解器类型无关：
 
@@ -339,11 +223,9 @@ waveSpectra/
 
 ---
 
-## 8. 已知限制
+## 7. 已知限制
 
 - 谱分析假设**均匀时间步**（`dt` 取平均）；非均匀输出请先插值到等间隔。
-- `userDefinedDistribution` 的坐标必须是 Field 语法（`nonuniform 3(0.1 0.2 0.3)`），
-  写 `(0.1 0.2 0.3)` 会报 `Expected keyword 'uniform' or 'nonuniform'`。
 - 重启算例会覆盖 `elevation.dat`（同一 function object 名字），要保留请改 `-out`/备份。
 - 并行只在 master 写文件，`elevation.dat` 行数与串行一致。
 - `waveElevation` 每次写出都重建射线（`meshSearch`），网格很大、测点很多时会有额外开销；
@@ -351,7 +233,7 @@ waveSpectra/
 
 ---
 
-## 9. 验证记录（本机实测）
+## 8. 验证记录（本机实测）
 
 | 测试 | 结果 |
 |---|---|
@@ -359,11 +241,10 @@ waveSpectra/
 | `interFoam` + damBreak + 3 个测点 | 1 s 物理时间，488 行数据；x=0.10 处初始 η=0.2905 m（damBreak 初始水深 0.292 m，✔）；t=1 s 时三点 η≈0.0869/0.0867/0.0500 |
 | `waveSpectra` 合成正弦波 | Hm0 误差 0.02%，Tp/Tm02/T1/3 精确 |
 | `waveSpectra` 读 damBreak 数据 | 正常输出 `waveStats.dat` + 3 个谱文件 |
-| `GaugesNProbes` + `probeDefinitions`（1 组 lineDistribution 3 点 + 1 组 userDefinedDistribution 2 点） | 生成 `system/gaugesNProbes.functions` 与 2 个 `.vtk`；`#include` 后 `interFoam` 输出 `waveElevation/<name>/elevation.dat`（3 列）与 `probes` 的 `alpha.water`/`U`（2 点） |
 
 ---
 
-## 10. 目录结构
+## 9. 目录结构
 
 ```
 waveMonitoring/
@@ -375,12 +256,7 @@ waveMonitoring/
 ├── waveSpectra/
 │   ├── Make/{files,options}
 │   └── waveSpectra.C                 # 后处理程序
-├── gaugesNProbes/
-│   ├── Make/{files,options}
-│   ├── GaugesNProbes.C               # probeDefinitions -> functions 片段
-│   └── pointDistributions/           # line/circular/quadrilateral/concatenated/userDefined
 └── examples/
     ├── waveElevation.controlDict     # 可直接抄的 functions 片段
-    ├── probeDefinitions              # GaugesNProbes 的布局示例
     └── README.md                     # 用 OpenFOAM 自带 damBreak 做 5 分钟试跑
 ```

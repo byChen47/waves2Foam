@@ -241,12 +241,7 @@ VOF solver - no waves2Foam solver or library involved:
   the free-surface elevation time series at a list of gauges to a single
   self-describing file (`postProcessing/waveElevation/<name>/elevation.dat`);
 * `waveSpectra` is a post-processing utility that turns that file into spectra,
-  `Hm0`, `Tp`, `Tm02`, `H1/3`, `T1/3`, `Hmax` and mean water level;
-* `GaugesNProbes` replaces waves2Foam's `waveGaugesNProbes`: it reads the gauge
-  layout from `constant/probeDefinitions` (same keywords) and writes a
-  `functions` fragment - one `waveElevation` entry per `waveGauge`, one `probes`
-  entry per `probeGauge` - so the monitoring is switched on with a single
-  `#include`.
+  `Hm0`, `Tp`, `Tm02`, `H1/3`, `T1/3`, `Hmax` and mean water level.
 
 ```bash
 cd waveMonitoring && ./Allwmake          # needs OpenFOAM only

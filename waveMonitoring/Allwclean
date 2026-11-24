@@ -9,13 +9,7 @@ then
     ( cd waveSpectra && wclean ) >/dev/null 2>&1 || true
 fi
 
-if [ -d gaugesNProbes/Make ]
-then
-    ( cd gaugesNProbes && wclean ) >/dev/null 2>&1 || true
-fi
-
 rm -f "${FOAM_USER_LIBBIN:-/nonexistent}/libwaveMonitoring.so" 2>/dev/null || true
 rm -f "${FOAM_USER_APPBIN:-/nonexistent}/waveSpectra" 2>/dev/null || true
-rm -f "${FOAM_USER_APPBIN:-/nonexistent}/GaugesNProbes" 2>/dev/null || true
 
 echo "waveMonitoring cleaned"
