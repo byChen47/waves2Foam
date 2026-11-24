@@ -6,7 +6,6 @@ This repository is a **fork of [ogoe/waves2Foam](https://github.com/ogoe/waves2F
 
 * **HOS (Higher-Order Spectral) wave generation** — HOS-NWT / HOS-ocean + Grid2Grid bridged into the waves2Foam relaxation zones (`HOSwaves2Foam/`), with regular- and irregular-wave tutorial cases;
 * **`overWaveDyMFoam`** — an overset + dynamic-mesh wave solver;
-* **`waveMonitoring/`** — a standalone wave-measurement module (free-surface elevation function object + spectral analysis) that works with *any* VOF solver and links nothing from waves2Foam;
 * support for **OpenFOAM v2206, v2406 and v2606** (OpenFOAM+ branch), with all ThirdParty dependencies bundled so a fresh clone compiles out of the box. Shared sources are version-conditional, so one tree still builds on the older branches — see [Supported OpenFOAM versions](#supported-openfoam-versions).
 
 ## Repository structure
@@ -28,7 +27,6 @@ waves2Foam/
 │   ├── solvers/solvers2406_PLUS/  # same solvers for OpenFOAM v2406
 │   ├── solvers/solvers2606_PLUS/  # same solvers for OpenFOAM v2606
 │   └── utilities/                 # setWaveField, setWaveParameters, waveGaugesNProbes, ...
-├── waveMonitoring/             # standalone wave measurement (any solver)
 ├── tutorials/                  # standard waves2Foam tutorial cases
 ├── ThirdParty/                 # LAPACK 3.3.1, SPARSKIT2, OceanWave3D, fenton4Foam
 ├── HOSwaves2Foam/              # HOS coupling module (see below)
@@ -231,46 +229,6 @@ Four solvers are provided, per OpenFOAM version under
   `false`; enabling it makes the solver stop with an explicit fatal error.
 
 `./Allwmake` discovers and builds it automatically alongside the other solvers — no extra steps are needed.
-
-## Wave monitoring (standalone)
-
-`waveMonitoring/` is a self-contained module for measuring waves with **any**
-VOF solver - no waves2Foam solver or library involved:
-
-* `libwaveMonitoring.so` provides the `waveElevation` function object: it writes
-  the free-surface elevation time series at a list of gauges to a single
-  self-describing file (`postProcessing/waveElevation/<name>/elevation.dat`);
-* `waveSpectra` is a post-processing utility that turns that file into spectra,
-  `Hm0`, `Tp`, `Tm02`, `H1/3`, `T1/3`, `Hmax` and mean water level.
-
-```bash
-cd waveMonitoring && ./Allwmake          # needs OpenFOAM only
-
-# then, in any case's system/controlDict:
-functions
-{
-    waveElevation1
-    {
-        type     waveElevation;
-        libs     ("libwaveMonitoring.so");
-        locations ((0.10 0.05 0.005) (0.25 0.05 0.005) (0.40 0.05 0.005));
-        writeControl timeStep;
-        writeInterval 1;
-    }
-}
-
-# after the run:
-waveSpectra -file postProcessing/waveElevation/waveElevation1/elevation.dat \
-            -out waveSpectra -tStart 0.6
-```
-
-The elevation is the *integrated* liquid height along the vertical ray through
-each gauge (`eta = integral(alpha dl)`), which stays well behaved for aerated or
-broken surfaces, and equals the free-surface height above the bottom in a
-flat-bottom tank. See [`waveMonitoring/README.md`](waveMonitoring/README.md) for
-the full parameter list, output format, algorithm and validation, and
-[`waveMonitoring/examples/`](waveMonitoring/examples) for a 5-minute damBreak
-smoke test.
 
 ## HOS wave coupling (HOSwaves2Foam)
 

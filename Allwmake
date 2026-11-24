@@ -278,25 +278,6 @@ fi
 
 echo ""
 echo "====================================="
-echo "    COMPILE waveMonitoring"
-echo "====================================="
-
-if [ -f "$WAVES_DIR/waveMonitoring/Allwmake" ]
-then
-    # Standalone wave-measurement module: OpenFOAM only, no waves2Foam linking
-    if ! ( cd "$WAVES_DIR/waveMonitoring" && ./Allwmake )
-    then
-        echo "*** WAVE MONITORING MODULE FAILED"
-        FAILED="$FAILED waveMonitoring"
-    fi
-else
-    echo ""
-    echo "waveMonitoring/ not found, skipping."
-    echo ""
-fi
-
-echo ""
-echo "====================================="
 echo "    COMPILE BREEDER"
 echo "====================================="
 

@@ -1,3 +1,0 @@
-waveElevation/waveElevation.C
-
-LIB = $(FOAM_USER_LIBBIN)/libwaveMonitoring
