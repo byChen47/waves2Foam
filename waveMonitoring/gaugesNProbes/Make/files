@@ -1,0 +1,10 @@
+GaugesNProbes.C
+
+pointDistributions/pointDistributions.C
+pointDistributions/lineDistribution/lineDistribution.C
+pointDistributions/circularDistribution/circularDistribution.C
+pointDistributions/quadrilateralDistribution/quadrilateralDistribution.C
+pointDistributions/concatenatedDistribution/concatenatedDistribution.C
+pointDistributions/userDefinedDistribution/userDefinedDistribution.C
+
+EXE = $(FOAM_USER_APPBIN)/GaugesNProbes

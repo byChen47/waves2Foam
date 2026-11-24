@@ -35,6 +35,15 @@ then
     ( cd waveSpectra && wmake ) || rc=1
 fi
 
+if [ -d gaugesNProbes/Make ]
+then
+    echo ""
+    echo "====================================="
+    echo "  waveMonitoring: GaugesNProbes utility"
+    echo "====================================="
+    ( cd gaugesNProbes && wmake ) || rc=1
+fi
+
 echo ""
 if [ "$rc" -ne 0 ]
 then
@@ -47,4 +56,8 @@ echo "  lib : $FOAM_USER_LIBBIN/libwaveMonitoring.so"
 if [ -d waveSpectra/Make ]
 then
     echo "  app : $FOAM_USER_APPBIN/waveSpectra"
+fi
+if [ -d gaugesNProbes/Make ]
+then
+    echo "  app : $FOAM_USER_APPBIN/GaugesNProbes"
 fi

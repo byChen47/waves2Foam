@@ -1,0 +1,86 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  Example constant/probeDefinitions for GaugesNProbes
+  Keywords are the waves2Foam ones, so existing files work unchanged.
+
+  Run:
+      GaugesNProbes -case .
+  then, in system/controlDict:
+
+      functions
+      {
+          #include "gaugesNProbes.functions"
+      }
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      probeDefinitions;
+}
+
+// ---------------------------------------------------------------------------
+// A row of wave gauges (free-surface elevation), one gauge every 0.2 m
+// ---------------------------------------------------------------------------
+gaugeRow
+{
+    type                waveGauge;
+
+    // any of: lineDistribution, circularDistribution,
+    //         quadrilateralDistribution, concatenatedDistribution,
+    //         userDefinedDistribution
+    pointDistribution   lineDistribution;
+
+    N                   3;
+    linestart           (0.10 0.05 0.0025);
+    lineend             (0.50 0.05 0.0025);
+    stretch             1.0;
+
+    // vertical extent of each gauge line (start -> end), used for the
+    // VTK visualisation; the elevation itself integrates over the whole
+    // water column
+    add                 (0 0.30 0);
+    axis                y;
+
+    // written into the generated function object (optional)
+    writeControl        timeStep;
+    writeInterval       1;
+    // alpha            alpha.water;
+}
+
+// ---------------------------------------------------------------------------
+// Point probes: alpha/U/p at fixed points (OpenFOAM "probes" function object)
+// ---------------------------------------------------------------------------
+pointProbes
+{
+    type                probeGauge;
+    pointDistribution   userDefinedDistribution;
+
+    N                   2;
+    xValues             nonuniform 2(0.2 0.3);
+    yValues             nonuniform 2(0.1 0.1);
+    zValues             nonuniform 2(0.0025 0.0025);
+
+    fields              (alpha.water U);
+    writeControl        timeStep;
+    writeInterval       1;
+}
+
+// ---------------------------------------------------------------------------
+// Gauges around a circle (e.g. a cylindrical tank) - uncomment to use
+// ---------------------------------------------------------------------------
+//gaugeCircle
+//{
+//    type                waveGauge;
+//    pointDistribution   circularDistribution;
+//    N                   36;
+//    centre              (0 0 0.05);
+//    radius              0.3;
+//    axis                y;
+//    add                 (0 0.4 0);
+//    writeControl        timeStep;
+//    writeInterval       1;
+//}
+
+// ************************************************************************* //
